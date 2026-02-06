@@ -1,0 +1,37 @@
+@use './tokens.scss';
+
+/* Reset & Base */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  font-family: var(--font-ui);
+  background-color: var(--color-bg-page);
+  color: var(--color-text-primary);
+  /* 
+     1920x1080 fixed aspect logic will be handled in App.vue or Layout wrapper.
+     For now, ensure full coverage.
+  */
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+}

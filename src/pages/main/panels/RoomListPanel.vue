@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import { useRoomStore } from '@/stores/useRoomStore';
 import RoomList from '@/widgets/RoomList.vue';
 import type { GameType, RoomLanguage } from '@/api/dtos/room.types';
@@ -11,6 +12,7 @@ const emit = defineEmits<{
 }>();
 
 const roomStore = useRoomStore();
+const router = useRouter();
 
 // 페이지네이션 상태
 const currentPage = ref(1);
@@ -114,7 +116,7 @@ async function handleJoinRoom(roomId: string) {
     try {
         const roomDetail = await roomStore.joinRoom(roomId);
         console.log('Joined room:', roomDetail);
-        // TODO: 대기실 화면으로 이동 로직 추가 필요
+        router.push({ name: 'WAITING_ROOM', params: { roomId } });
     } catch (e) {
         console.error('Join failed:', e);
         alert('방 참가에 실패했습니다.');

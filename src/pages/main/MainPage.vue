@@ -6,6 +6,7 @@ import { useRoomStore } from '@/stores/useRoomStore';
 import HubPanel from './panels/HubPanel.vue';
 import RoomListPanel from './panels/RoomListPanel.vue';
 import CreateRoomModal from '@/widgets/CreateRoomModal.vue';
+import BaseButton from '@/shared/ui/BaseButton.vue';
 import type { CreateRoomRequest } from '@/api/dtos/room.types';
 import logoSrc from '@/assets/images/logo.svg';
 import bgMainSrc from '@/assets/images/bg-main.jpg';
@@ -29,10 +30,9 @@ function handleLogout() {
 
 async function handleCreateRoom(payload: CreateRoomRequest) {
     try {
-        await roomStore.createRoom(payload);
+        const roomDetail = await roomStore.createRoom(payload);
         showCreateModal.value = false;
-        roomStore.fetchRooms();
-        viewMode.value = 'ROOM_LIST';
+        router.push({ name: 'WAITING_ROOM', params: { roomId: roomDetail.roomId } });
     } catch (e) {
         console.error(e);
     }
@@ -58,8 +58,8 @@ function switchView(mode: ViewMode) {
         <div class="user-menu" v-if="authStore.user">
             <span class="nickname">{{ authStore.user.nickname }}</span>
             <span class="tier">{{ authStore.user.tier }}</span>
-            <button @click="router.push({ name: 'MY_PAGE' })">마이페이지</button>
-            <button class="logout" @click="handleLogout">로그아웃</button>
+            <BaseButton variant="neutral" size="sm" @click="router.push({ name: 'MY_PAGE' })">마이페이지</BaseButton>
+            <BaseButton variant="danger" size="sm" @click="handleLogout">로그아웃</BaseButton>
         </div>
     </header>
     
@@ -146,26 +146,6 @@ function switchView(mode: ViewMode) {
         
         .nickname { font-weight: bold; }
         .tier { color: var(--color-accent-yellow); }
-        
-        button {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid var(--color-border-subtle);
-            color: var(--color-text-secondary);
-            padding: 6px 16px;
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-            transition: all 0.2s;
-            
-            &:hover { 
-                background: rgba(255, 255, 255, 0.2);
-                color: var(--color-text-primary); 
-            }
-            &.logout { 
-                color: var(--color-state-danger); 
-                border-color: rgba(255, 77, 109, 0.3);
-                &:hover { background: rgba(255, 77, 109, 0.1); }
-            }
-        }
     }
 }
 
@@ -173,7 +153,7 @@ function switchView(mode: ViewMode) {
     position: relative;
     z-index: 2;
     flex: 1;
-    padding: var(--space-4) 120px;
+    padding: var(--space-4) 6vw;
     overflow: hidden;
 }
 

@@ -5,6 +5,7 @@ const LoginPage = () => import('@/pages/auth/LoginPage.vue');
 const SignupPage = () => import('@/pages/auth/SignupPage.vue');
 const MainPage = () => import('@/pages/main/MainPage.vue');
 const MyPage = () => import('@/pages/user/MyPage.vue');
+const WaitingRoomPage = () => import('@/pages/room/WaitingRoomPage.vue');
 
 const routes: RouteRecordRaw[] = [
     {
@@ -29,6 +30,12 @@ const routes: RouteRecordRaw[] = [
         path: '/mypage',
         name: 'MY_PAGE',
         component: MyPage,
+        meta: { authRequired: true }
+    },
+    {
+        path: '/room/:roomId',
+        name: 'WAITING_ROOM',
+        component: WaitingRoomPage,
         meta: { authRequired: true }
     }
 ];

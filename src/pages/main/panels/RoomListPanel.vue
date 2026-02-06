@@ -2,6 +2,8 @@
 import { ref, onMounted, computed, watch } from 'vue';
 import { useRoomStore } from '@/stores/useRoomStore';
 import RoomList from '@/widgets/RoomList.vue';
+import type { GameType, RoomLanguage } from '@/api/dtos/room.types';
+import type { RoomFilterParams } from '@/api/room';
 
 const emit = defineEmits<{
   (e: 'navigate', view: 'HUB'): void;
@@ -10,24 +12,24 @@ const emit = defineEmits<{
 
 const roomStore = useRoomStore();
 
-// Pagination State
+// 페이지네이션 상태
 const currentPage = ref(1);
 const roomsPerPage = 10;
 
-// Filter State
+// 필터 상태
 const searchQuery = ref('');
 const searchTarget = ref<'TITLE' | 'HOST'>('TITLE');
 const selectedLanguage = ref<string>('ALL');
-const selectedMode = ref<string>('ALL'); // RANK, NORMAL
-const selectedStatus = ref<string>('ALL'); // ALL, WAITING, PLAYING
+const selectedMode = ref<string>('ALL'); 
+const selectedStatus = ref<string>('ALL'); 
 const activeDropdown = ref<'LANG' | 'MODE' | 'STATUS' | 'SEARCH_BY' | null>(null);
 
-const languages = ['ALL', 'JAVA', 'PYTHON', 'CPP', 'RUST', 'GO', 'JS', 'TS'];
-const modes = ['ALL', 'RANK', 'NORMAL'];
+const languages = ['ALL', 'JAVA', 'PYTHON', 'CPP', 'JAVASCRIPT'];
+const modes = ['ALL', 'RANKED', 'NORMAL'];
 const statuses = [
     { label: 'ALL ROOMS', value: 'ALL' },
     { label: 'AVAILABLE', value: 'WAITING' },
-    { label: 'IN-GAME', value: 'PLAYING' }
+    { label: 'IN-GAME', value: 'IN_GAME' }
 ];
 
 function toggleDropdown(type: 'LANG' | 'MODE' | 'STATUS' | 'SEARCH_BY') {
@@ -42,29 +44,30 @@ function resetFilters() {
     selectedStatus.value = 'ALL';
 }
 
-// Filtering Logic
+// 클라이언트 사이드 필터링 및 페이지네이션 로직
+// 참고: 실무에서는 API 파라미터를 통해 서버 사이드에서 처리하는 것이 일반적임
 const filteredRooms = computed(() => {
     return roomStore.rooms.filter(room => {
-        // 1. Search Query
+        // 검색어 필터
         const matchesSearch = searchTarget.value === 'TITLE' 
-            ? room.title.toLowerCase().includes(searchQuery.value.toLowerCase())
-            : room.hostNickname.toLowerCase().includes(searchQuery.value.toLowerCase());
+            ? room.roomName.toLowerCase().includes(searchQuery.value.toLowerCase())
+            : true;
         if (!matchesSearch) return false;
 
-        // 2. Language
+        // 언어 필터
         if (selectedLanguage.value !== 'ALL') {
              if (room.language !== selectedLanguage.value) {
                  return false;
              }
         }
 
-        // 3. Type (RANK/NORMAL)
-        if (selectedMode.value !== 'ALL' && room.roomType !== selectedMode.value) {
+        // 게임 타입 필터 (랭크/일반)
+        if (selectedMode.value !== 'ALL' && room.gameType !== selectedMode.value) {
             return false;
         }
 
-        // 4. Status (WAITING/PLAYING)
-        if (selectedStatus.value !== 'ALL' && room.status !== selectedStatus.value) {
+        // 상태 필터 (대기중/게임중)
+        if (selectedStatus.value !== 'ALL' && room.roomStatus !== selectedStatus.value) {
             return false;
         }
 
@@ -85,13 +88,38 @@ function setPage(page: number) {
     }
 }
 
+// 방 목록 새로고침 (API 호출)
+async function refreshRooms() {
+    const params: RoomFilterParams = {};
+    if (searchQuery.value && searchTarget.value === 'TITLE') {
+        params.roomName = searchQuery.value;
+    }
+    if (selectedLanguage.value !== 'ALL') params.language = selectedLanguage.value as RoomLanguage;
+    if (selectedMode.value !== 'ALL') params.gameType = selectedMode.value as GameType;
+    
+    await roomStore.fetchRooms(params);
+}
+
+// 필터 변경 시 페이지 번호 초기화
 watch([searchQuery, searchTarget, selectedLanguage, selectedMode, selectedStatus], () => {
     currentPage.value = 1;
 });
 
 onMounted(() => {
-    roomStore.fetchRooms();
+    refreshRooms();
 });
+
+// 방 참가 처리
+async function handleJoinRoom(roomId: string) {
+    try {
+        const roomDetail = await roomStore.joinRoom(roomId);
+        console.log('Joined room:', roomDetail);
+        // TODO: 대기실 화면으로 이동 로직 추가 필요
+    } catch (e) {
+        console.error('Join failed:', e);
+        alert('방 참가에 실패했습니다.');
+    }
+}
 </script>
 
 <template>
@@ -110,7 +138,7 @@ onMounted(() => {
                 <span class="plus-icon">+</span>
                 Create Room
             </button> 
-            <button class="refresh-btn" title="Refresh Rooms" @click="roomStore.fetchRooms">
+            <button class="refresh-btn" title="Refresh Rooms" @click="refreshRooms">
                 <span class="refresh-icon" :class="{ rotating: roomStore.isLoading }">↻</span>
             </button>
         </div>
@@ -118,7 +146,7 @@ onMounted(() => {
         <div class="filter-group">
             <div class="group-label">FILTERS</div>
             
-            <!-- Language Dropdown -->
+            <!-- 언어 필터 드롭다운 -->
             <div class="dropdown-wrapper">
                 <button class="filter-pill" :class="{ active: activeDropdown === 'LANG' }" @click="toggleDropdown('LANG')">
                     Language: {{ selectedLanguage }} <span>▼</span>
@@ -132,7 +160,7 @@ onMounted(() => {
                 </Transition>
             </div>
 
-            <!-- Mode Dropdown -->
+            <!-- 게임 타입 필터 드롭다운 -->
             <div class="dropdown-wrapper">
                 <button class="filter-pill" :class="{ active: activeDropdown === 'MODE' }" @click="toggleDropdown('MODE')">
                     Type: {{ selectedMode }} <span>▼</span>
@@ -146,7 +174,7 @@ onMounted(() => {
                 </Transition>
             </div>
 
-            <!-- Status Dropdown -->
+            <!-- 상태 필터 드롭다운 -->
             <div class="dropdown-wrapper">
                 <button class="filter-pill" :class="{ active: activeDropdown === 'STATUS' }" @click="toggleDropdown('STATUS')">
                     Status: {{ statuses.find(s => s.value === selectedStatus)?.label }} <span>▼</span>
@@ -160,7 +188,7 @@ onMounted(() => {
                 </Transition>
             </div>
 
-            <!-- Reset Filters Icon -->
+            <!-- 필터 초기화 버튼 -->
             <button class="filter-reset-icon" title="Reset Filters" @click="resetFilters">
                 <span class="icon">⟲</span>
             </button>
@@ -207,7 +235,7 @@ onMounted(() => {
         <div v-if="filteredRooms.length === 0 && !roomStore.isLoading" class="no-results">
             검색 결과와 일치하는 방이 없습니다.
         </div>
-        <RoomList v-else :rooms="paginatedRooms" :loading="roomStore.isLoading" />
+        <RoomList v-else :rooms="paginatedRooms" :loading="roomStore.isLoading" @join="handleJoinRoom" />
     </main>
   </div>
 </template>

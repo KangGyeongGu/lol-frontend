@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { RoomSummary } from '@/api/dtos/room';
+import type { RoomSummary } from '@/api/dtos/room.types';
 
 interface Props {
   rooms: RoomSummary[];
@@ -10,11 +10,6 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   (e: 'join', roomId: string): void
 }>();
-
-const modeLabels = {
-    SPEED: 'SPEED',
-    OPTIMIZATION: 'OPTIM'
-};
 </script>
 
 <template>
@@ -32,31 +27,31 @@ const modeLabels = {
             :key="room.roomId" 
             class="room-card"
         >   
-            <!-- 1. Header: Mode Type & Language -->
+            <!-- 1. 헤더: 게임 모드 및 언어 -->
             <div class="card-header">
-                <span class="room-type-badge" :class="room.roomType.toLowerCase()">{{ room.roomType }}</span>
+                <span class="room-type-badge" :class="room.gameType.toLowerCase()">{{ room.gameType }}</span>
                 <span class="lang-badge">{{ room.language || '?' }}</span>
             </div>
             
-            <!-- 2. Content: Title -->
-            <h3 class="room-title">{{ room.title }}</h3>
+            <!-- 2. 본문: 방 제목 -->
+            <h3 class="room-title">{{ room.roomName }}</h3>
             
-            <!-- 3. Host Info -->
+            <!-- 3. 상태 정보 -->
             <div class="host-info">
-                <span class="label">HOST</span>
-                <span class="name">{{ room.hostNickname }}</span>
+                <span class="label">STATUS</span>
+                <span class="name">{{ room.roomStatus }}</span>
             </div>
 
-            <!-- 4. Players Indicator -->
+            <!-- 4. 참여 인원 표시 -->
             <div class="players-indicator">
                 <div class="slot filled" v-for="n in room.currentPlayers" :key="'fill-'+n"></div>
                 <div class="slot empty" v-for="n in (room.maxPlayers - room.currentPlayers)" :key="'empty-'+n"></div>
                 <span class="count">{{ room.currentPlayers }}/{{ room.maxPlayers }}</span>
             </div>
             
-            <!-- 5. Join Button -->
-            <button class="join-btn" @click="emit('join', room.roomId)">
-                JOIN
+            <!-- 5. 참여 버튼 -->
+            <button class="join-btn" :disabled="!room.joinable" @click="emit('join', room.roomId)">
+                {{ room.joinable ? 'JOIN' : 'FULL' }}
             </button>
         </div>
     </div>
@@ -198,6 +193,13 @@ const modeLabels = {
     
     &:active {
         transform: scale(0.98);
+    }
+
+    &:disabled {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--color-text-muted);
+        cursor: not-allowed;
+        box-shadow: none;
     }
 }
 </style>

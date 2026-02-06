@@ -36,7 +36,7 @@ onMounted(async () => {
     } catch (e) {
       console.error('Login failed', e);
       alert('로그인 처리에 실패했습니다.');
-      router.replace({ name: 'LOGIN' }); // Redirect to login to clear params
+      router.replace({ name: 'LOGIN' });
     }
   }
 });

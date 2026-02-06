@@ -22,7 +22,7 @@ export interface LoginResponse {
 export interface SignupRequest {
     signupToken: string;
     nickname: string;
-    language: string; // 'JAVA' | 'PYTHON' | 'CPP' | 'JAVASCRIPT'
+    language: string;
 }
 
 export interface SignupResponse {

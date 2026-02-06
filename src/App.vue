@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// FE_STACK: Composition API, <script setup>
 </script>
 
 <template>

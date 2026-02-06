@@ -40,3 +40,6 @@ Thumbs.db
 
 # Optional: Test coverage
 coverage/
+
+# Misc
+.npm-cache/

@@ -2,18 +2,18 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import bannerLiveSrc from '@/assets/images/banner-live.png';
 
-// HubPanel.vue: The main dashboard view
+// 허브 패널: 메인 대시보드 뷰
 const emit = defineEmits<{
   (e: 'navigate', view: 'ROOM_LIST'): void;
   (e: 'create'): void;
 }>();
 
-// --- 1. State for Tabs & Carousel ---
+// --- 탭 및 캐러셀 상태 ---
 const statTab = ref<'BANNED' | 'PICKED'>('BANNED');
-const statPage = ref(0); // 0 or 1 (for 5 items each, total 10)
+const statPage = ref(0);
 const playerPage = ref(0);
 
-// --- 2. Mock Data (10 items each) ---
+// --- Mock 데이터 (임시 데이터) ---
 const bannedStats = ref([
     { rank: 1, name: 'Graph', val: '8%' },
     { rank: 2, name: 'DP', val: '8%' },
@@ -53,7 +53,7 @@ const topPlayers = ref([
     { rank: 10, name: 'Ivan', score: '2100' },
 ]);
 
-// --- 3. Computed for Pagination ---
+// --- 페이지네이션 계산 로직 ---
 const visibleStats = computed(() => {
     const source = statTab.value === 'BANNED' ? bannedStats.value : pickedStats.value;
     const start = statPage.value * 5;
@@ -65,13 +65,13 @@ const visiblePlayers = computed(() => {
     return topPlayers.value.slice(start, start + 5);
 });
 
-// --- 4. Rotation Logic ---
+// --- 데이터 로테이션 로직 ---
 let timer: any;
 onMounted(() => {
     timer = setInterval(() => {
         statPage.value = (statPage.value + 1) % 2;
         playerPage.value = (playerPage.value + 1) % 2;
-    }, 5000); // Rotate every 5 seconds
+    }, 5000); // 5초마다 교체
 });
 
 onUnmounted(() => {
@@ -81,7 +81,7 @@ onUnmounted(() => {
 
 <template>
     <div class="hub-content">
-        <!-- Center Area -->
+        <!-- 메인 콘텐츠 영역 -->
         <section class="main-section">
             <div class="hero-placeholder" :style="{ backgroundImage: `url(${bannerLiveSrc})` }">
                 <div class="hero-content">
@@ -92,7 +92,6 @@ onUnmounted(() => {
             </div>
             
             <div class="action-row">
-                <!-- ... buttons remain same -->
                 <button class="action-card create" @click="emit('create')">
                     <span class="label">대전 생성</span>
                 </button>
@@ -101,7 +100,7 @@ onUnmounted(() => {
                 </button>
             </div>
 
-            <!-- Bottom Fixed Chat (Now inside Main Section) -->
+            <!-- 하단 고정 채팅 -->
             <div class="global-chat-dock">
                 <div class="chat-header">전체 채팅</div>
                 <div class="chat-input-area">
@@ -111,9 +110,9 @@ onUnmounted(() => {
             </div>
         </section>
 
-        <!-- Right Sidebar -->
+        <!-- 오른쪽 사이드바 -->
         <aside class="side-section">
-            <!-- Stats Panel (Banned / Picked) -->
+            <!-- 통계 패널 (Banned / Picked) -->
             <div class="ranking-panel">
                 <div class="tabs">
                     <button 
@@ -138,7 +137,7 @@ onUnmounted(() => {
                 </ul>
             </div>
             
-            <!-- Top Players Panel -->
+            <!-- 상위 플레이어 패널 -->
              <div class="ranking-panel players">
                 <h3>Top Players</h3>
                 <ul>
@@ -159,18 +158,14 @@ onUnmounted(() => {
 .hub-content {
     flex: 1;
     display: grid;
-    // 3.5:1 ratio for Left:Right (Narrower sidebar)
     grid-template-columns: 3.5fr 1fr;
     gap: var(--space-6);
     height: 100%;
-    // Padding handled by MainPage
 }
 
 .main-section {
     grid-column: 1;
     display: grid;
-    // Rows: Hero (40%) -> Action (80px) -> Chat (Rest)
-    // Adjusted heights per item 4
     grid-template-rows: minmax(300px, 40%) 80px 1fr;
     gap: var(--space-6);
 }
@@ -183,7 +178,7 @@ onUnmounted(() => {
     height: 100%;
 }
 
-// Global Chat
+// 전체 채팅창 스타일
 .global-chat-dock {
     height: 100%; 
     background: rgba(10, 10, 10, 0.7);
@@ -241,7 +236,6 @@ onUnmounted(() => {
     box-shadow: 0 0 20px rgba(58, 242, 255, 0.1);
     display: flex;
     flex-direction: column;
-    // Align Top-Left as requested (item 2)
     justify-content: flex-start;
     align-items: flex-start;
     padding: var(--space-8);
@@ -256,7 +250,7 @@ onUnmounted(() => {
     .hero-content {
         position: relative;
         z-index: 2;
-        margin-top: var(--space-4); // slight offset from top edge
+        margin-top: var(--space-4);
     }
     
     h1 {
@@ -314,11 +308,11 @@ onUnmounted(() => {
     flex: 1;
     display: flex;
     flex-direction: column;
-    align-items: center; /* Center align content */
+    align-items: center;
     
     .tabs {
         display: flex;
-        justify-content: center; /* Center tabs */
+        justify-content: center;
         gap: var(--space-4);
         margin-bottom: var(--space-4);
         border-bottom: 2px solid rgba(255, 255, 255, 0.1);
@@ -344,7 +338,6 @@ onUnmounted(() => {
     }
     
     h3 {
-        // Style for Top Players Header (no tabs)
         font-family: var(--font-display);
         color: var(--color-accent-green);
         font-size: var(--fontSize-lg);
@@ -355,15 +348,15 @@ onUnmounted(() => {
     
     ul {
         list-style: none;
-        width: 100%; /* Full width for list items to space out correctly */
-        flex: 1; // Take remaining space
+        width: 100%;
+        flex: 1;
         display: flex;
         flex-direction: column;
         li {
             display: flex;
-            align-items: center; // Vertical center
-            flex: 1; // Distribute height equally
-            padding: 0; // Remove fixed padding
+            align-items: center;
+            flex: 1;
+            padding: 0;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             font-family: var(--font-display);
             font-size: var(--fontSize-md);
@@ -386,7 +379,7 @@ onUnmounted(() => {
                 flex: 1;
                 margin-left: var(--space-2);
                 color: var(--color-text-primary);
-                text-align: left; // Left Align close to rank (item 3)
+                text-align: left;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;

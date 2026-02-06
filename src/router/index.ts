@@ -1,7 +1,6 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
 import { useAuthStore } from '@/stores/useAuthStore';
 
-// FE_ROUTING_RULES: "Lazy Loading을 기본으로 한다."
 const LoginPage = () => import('@/pages/auth/LoginPage.vue');
 const SignupPage = () => import('@/pages/auth/SignupPage.vue');
 const MainPage = () => import('@/pages/main/MainPage.vue');
@@ -39,14 +38,14 @@ const router = createRouter({
     routes
 });
 
-// Navigation Guard
-router.beforeEach((to, from, next) => {
+// 네비게이션 가드: 인증 상태에 따른 라우팅 제어
+router.beforeEach((to, _from, next) => {
     const authStore = useAuthStore();
 
     if (to.meta.authRequired && !authStore.isAuthenticated) {
         next({ name: 'LOGIN' });
     } else if (to.name === 'LOGIN' && authStore.isAuthenticated) {
-        // If already logged in, go to MAIN
+        // 이미 로그인된 상태라면 메인 페이지로 이동
         next({ name: 'MAIN' });
     } else {
         next();

@@ -2,7 +2,7 @@
 import { ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/useAuthStore';
-import type { SignupRequest } from '@/api/dtos/auth';
+import type { SignupRequest } from '@/api/dtos/auth.types';
 
 const route = useRoute();
 const router = useRouter();
@@ -10,7 +10,7 @@ const authStore = useAuthStore();
 
 const signupToken = (route.query.signupToken as string) || '';
 const nickname = ref('');
-const language = ref('JAVA'); // Default
+const language = ref('JAVA'); // 기본 선택값
 const isSubmitting = ref(false);
 
 const languages = [
@@ -20,6 +20,7 @@ const languages = [
     { value: 'JAVASCRIPT', label: 'JavaScript' }
 ];
 
+// 회원가입 제출 처리
 async function handleSignup() {
     if (!nickname.value) return;
     
@@ -123,7 +124,7 @@ async function handleSignup() {
 }
 
 .submit-button {
-    background-color: var(--color-accent-blue); // Assuming blue/primary logic
+    background-color: var(--color-accent-blue);
     background-color: var(--color-accent-cyan);
     color: var(--color-text-inverse);
     padding: var(--space-3);

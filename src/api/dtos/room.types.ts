@@ -1,22 +1,53 @@
+export type GameType = 'NORMAL' | 'RANKED';
+export type RoomLanguage = 'JAVA' | 'PYTHON' | 'CPP' | 'JAVASCRIPT';
+export type RoomStatus = 'WAITING' | 'IN_GAME';
+
+export interface PageCursor {
+    limit: number;
+    nextCursor: string | null;
+}
+
 export interface RoomSummary {
-    roomId: string; // UUID
-    hostId: string;
-    hostNickname: string;
-    title: string;
-    gameMode: 'SPEED' | 'OPTIMIZATION'; // TBD
-    status: 'WAITING' | 'PLAYING';
-    currentPlayers: number;
+    roomId: string;
+    roomName: string;
+    gameType: GameType;
+    language: RoomLanguage;
     maxPlayers: number;
-    language?: string;
-    roomType: 'RANK' | 'NORMAL';
+    currentPlayers: number;
+    roomStatus: RoomStatus;
+    joinable: boolean;
+    updatedAt: string;
+}
+
+export interface PagedRoomList {
+    items: RoomSummary[];
+    page: PageCursor;
+    listVersion: number;
 }
 
 export interface CreateRoomRequest {
-    title: string;
-    gameMode: string;
+    roomName: string;
+    gameType: GameType;
+    language: RoomLanguage;
+    maxPlayers: number;
 }
 
-export interface JoinRoomResponse {
+export interface RoomPlayer {
+    user: {
+        userId: string;
+        nickname: string;
+        tier: string;
+        score: number;
+    };
+    state: 'READY' | 'UNREADY' | 'DISCONNECTED';
+    isHost: boolean;
+}
+
+export interface RoomDetail {
     roomId: string;
-    token?: string; // If room access token needed
+    roomName: string;
+    gameType: GameType;
+    language: RoomLanguage;
+    maxPlayers: number;
+    players: RoomPlayer[];
 }

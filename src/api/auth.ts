@@ -1,5 +1,5 @@
 import { apiClient } from '@/api/core';
-import type { LoginRequest, LoginResponse, SignupRequest, SignupResponse } from '@/api/dtos/auth';
+import type { LoginRequest, LoginResponse, SignupRequest, SignupResponse } from '@/api/dtos/auth.types';
 
 export const authApi = {
     login: (code: string) => {

@@ -1,36 +1,40 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import type { CreateRoomRequest } from '@/api/dtos/room.types';
+import type { CreateRoomRequest, RoomLanguage } from '@/api/dtos/room.types';
 
 const emit = defineEmits<{
   (e: 'close'): void;
-  (e: 'create', payload: CreateRoomRequest & { roomType: string, maxPlayers: number, language: string }): void;
+  (e: 'create', payload: CreateRoomRequest): void;
 }>();
 
-const title = ref('');
-const roomType = ref<'RANK' | 'NORMAL'>('RANK');
+const roomName = ref('');
+const gameType = ref<'RANKED' | 'NORMAL'>('RANKED');
 const maxPlayers = ref(4);
-const language = ref('Python');
+const language = ref<RoomLanguage>('PYTHON');
 
 const participantOptions = [2, 3, 4, 5, 6];
-const languageOptions = ['Python', 'Java', 'C++', 'JavaScript', 'Go', 'Rust'];
+const languageOptions: { label: string, value: RoomLanguage }[] = [
+    { label: 'Python', value: 'PYTHON' },
+    { label: 'Java', value: 'JAVA' },
+    { label: 'C++', value: 'CPP' },
+    { label: 'JavaScript', value: 'JAVASCRIPT' }
+];
 
 function submit() {
-    if (!title.value) return;
+    if (!roomName.value) return;
     emit('create', {
-        title: title.value,
-        gameMode: 'SPEED', // Defaulting for now
-        roomType: roomType.value,
+        roomName: roomName.value,
+        gameType: gameType.value,
         maxPlayers: maxPlayers.value,
         language: language.value
-    } as any);
+    });
 }
 </script>
 
 <template>
   <div class="modal-overlay" @click.self="emit('close')">
     <div class="modal-container">
-        <!-- Decoration: Diagonal Stripes Background -->
+        <!-- 배경 디자인: 대각선 스트라이프 패턴 -->
         <div class="stripes-bg"></div>
 
         <header class="modal-header">
@@ -39,36 +43,36 @@ function submit() {
         </header>
         
         <div class="modal-body">
-            <!-- Field 1: Room Name -->
+            <!-- 필드 1: 방 이름 입력 -->
             <div class="form-section">
                 <div class="section-header">
                     <label>방 이름</label>
-                    <span class="char-count">{{ title.length }} / 30</span>
+                    <span class="char-count">{{ roomName.length }} / 30</span>
                 </div>
                 <div class="input-wrapper">
-                    <input v-model="title" type="text" placeholder="배틀룸 이름을 입력하세요..." maxlength="30" />
+                    <input v-model="roomName" type="text" placeholder="배틀룸 이름을 입력하세요..." maxlength="30" />
                 </div>
             </div>
             
-            <!-- Field 2: Room Type -->
+            <!-- 필드 2: 게임 타입 선택 (랭크/일반) -->
             <div class="mode-toggle-group">
                 <button 
-                    class="mode-btn rank" 
-                    :class="{ active: roomType === 'RANK' }"
-                    @click="roomType = 'RANK'"
+                    class="mode-btn ranked" 
+                    :class="{ active: gameType === 'RANKED' }"
+                    @click="gameType = 'RANKED'"
                 >
                     랭크 게임
                 </button>
                 <button 
                     class="mode-btn normal" 
-                    :class="{ active: roomType === 'NORMAL' }"
-                    @click="roomType = 'NORMAL'"
+                    :class="{ active: gameType === 'NORMAL' }"
+                    @click="gameType = 'NORMAL'"
                 >
                     일반 게임
                 </button>
             </div>
             
-            <!-- Field 3: Participant Count -->
+            <!-- 필드 3: 참여 인원 설정 -->
             <div class="form-section">
                 <label>참가 인원</label>
                 <div class="pill-group">
@@ -82,24 +86,24 @@ function submit() {
                         {{ count }}명
                     </button>
                 </div>
-                <!-- Visual Indicator (Progress Bar Style) -->
+                <!-- 시각적 인디케이터 (진척도 바 스타일) -->
                 <div class="progress-track">
                     <div class="progress-fill" :style="{ width: `${((maxPlayers - 2) / 4) * 100}%` }"></div>
                 </div>
             </div>
 
-            <!-- Field 4: Language Selection -->
+            <!-- 필드 4: 언어 선택 -->
             <div class="form-section">
                 <label>사용 언어</label>
                 <div class="lang-grid">
                     <button 
-                        v-for="lang in languageOptions" 
-                        :key="lang"
+                        v-for="opt in languageOptions" 
+                        :key="opt.value"
                         class="lang-btn"
-                        :class="{ active: language === lang }"
-                        @click="language = lang"
+                        :class="{ active: language === opt.value }"
+                        @click="language = opt.value"
                     >
-                        {{ lang }}
+                        {{ opt.label }}
                     </button>
                 </div>
             </div>
@@ -107,7 +111,7 @@ function submit() {
 
         <footer class="modal-footer">
             <button class="btn-footer cancel" @click="emit('close')">취소</button>
-            <button class="btn-footer create" @click="submit" :disabled="!title">배틀룸 생성</button>
+            <button class="btn-footer create" @click="submit" :disabled="!roomName">배틀룸 생성</button>
         </footer>
     </div>
   </div>
@@ -264,7 +268,7 @@ function submit() {
         cursor: pointer;
         transition: all 0.3s;
 
-        &.rank.active {
+        &.ranked.active {
             border-color: var(--color-accent-magenta);
             color: var(--color-accent-magenta);
             background: rgba(255, 79, 216, 0.05);
@@ -351,11 +355,6 @@ function submit() {
         &:hover:not(.active) {
             background: rgba(255, 255, 255, 0.05);
             border-color: rgba(255, 255, 255, 0.15);
-        }
-        
-        // Mock nonavailable styles for the others
-        &:nth-child(n+4):not(.active) {
-            opacity: 0.3;
         }
     }
 }

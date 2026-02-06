@@ -1,7 +1,8 @@
 import axios, { type AxiosInstance, type AxiosResponse, type AxiosError } from 'axios';
 import { tokenStorage } from '@/utils/token.util';
+import { findMock } from '../mock/registry';
+import '../mock/room.mock';
 
-// FE_STACK: VITE_API_BASE_URL
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
 
 export const apiClient: AxiosInstance = axios.create({
@@ -12,9 +13,33 @@ export const apiClient: AxiosInstance = axios.create({
     timeout: 10000,
 });
 
-// Request Interceptor: Inject Token
+// 요청 인터셉터: 인증 토큰 주입 및 Mocking 처리
 apiClient.interceptors.request.use(
-    (config) => {
+    async (config) => {
+        // Mocking 로직 (환경 변수 VITE_API_MOCK이 'true'인 경우)
+        if (import.meta.env.VITE_API_MOCK === 'true') {
+            const mockHandler = findMock(config);
+            if (mockHandler) {
+                console.warn(`[Mock] Intercepted ${config.method?.toUpperCase()} ${config.url}`);
+                const data = typeof mockHandler === 'function' ? mockHandler(config) : mockHandler;
+
+                // 네트워크 지연 시뮬레이션 (500ms)
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                // 요청을 가로채서 Mock 데이터 반환
+                config.adapter = async () => {
+                    return {
+                        data: { data }, // API 명세에 따른 SuccessEnvelope 래핑
+                        status: 200,
+                        statusText: 'OK',
+                        headers: {},
+                        config
+                    };
+                };
+            }
+        }
+
+        // 인증 토큰 주입
         const token = tokenStorage.getAccessToken();
         if (token && config.headers) {
             config.headers.Authorization = `Bearer ${token}`;
@@ -24,28 +49,20 @@ apiClient.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
-// Response Interceptor: Error Handling per FE_API_CLIENT.md
+// 응답 인터셉터: 공통 응답 처리 및 에러 처리
 apiClient.interceptors.response.use(
     (response: AxiosResponse) => {
-        // FE_API_CLIENT: "성공 응답은 data만 사용한다." -> Extract data if wrapped in envelope?
-        // OpenAPI says SuccessEnvelope has { data, meta }.
-        // We strictly follow the schema. If the backend returns { data: ... }, we return response.data.data?
-        // Let's assume the caller handles the envelope or we unwrap it here.
-        // Spec says: "성공 응답은 data만 사용한다." -> It implies unwrapping.
+        // 성공 응답 시 envelope에서 data 부분만 추출하여 반환
         if (response.data && response.data.data) {
             return response.data.data;
         }
         return response.data;
     },
     (error: AxiosError) => {
-        // FE_API_CLIENT: "실패 응답은 HTTP status가 아니라 error.code로 분기한다."
-        // However, axios throws on 4xx/5xx by default.
-        // We should extract the error code from the response body.
+        // 에러 응답 시 HTTP 상태 코드가 아닌 서버 정의 에러 코드로 분기 처리 지원
         if (error.response && error.response.data) {
-            const errorBody = error.response.data as any; // ErrorEnvelope
+            const errorBody = error.response.data as any;
             if (errorBody.error && errorBody.error.code) {
-                // Re-throw with clearer structure or just pass it through
-                // For now, attach code to the error object for easier checking
                 (error as any).code = errorBody.error.code;
                 (error as any).message = errorBody.error.message;
             }

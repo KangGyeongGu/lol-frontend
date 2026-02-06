@@ -48,7 +48,7 @@ function switchView(mode: ViewMode) {
     <div class="main-overlay"></div>
     <header class="app-header">
         <div class="header-left">
-            <!-- Placeholder for left items if any -->
+            <!-- 필요한 경우 왼쪽 아이템 추가 가능 -->
         </div>
         
         <div class="logo-container" @click="viewMode = 'HUB'" style="cursor: pointer;">
@@ -100,18 +100,18 @@ function switchView(mode: ViewMode) {
     .main-overlay {
         position: absolute;
         inset: 0;
-        background: rgba(11, 8, 20, 0.7); // Darken the busy background
+        background: rgba(11, 8, 20, 0.7); // 복잡한 배경 명도를 낮추기 위한 오버레이
         z-index: 1;
         pointer-events: none;
     }
 }
 
 .app-header {
-    height: 100px; // Increased height to accommodate logo + spacing
+    height: 100px; // 로고와 간격 확보를 위해 높이 증가
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: var(--space-4) var(--space-6) 0; // Add top padding
+    padding: var(--space-4) var(--space-6) 0; // 상단 패딩 추가
     z-index: 10;
     position: relative; 
     
@@ -120,7 +120,7 @@ function switchView(mode: ViewMode) {
     
     .header-left { 
         flex: 1; 
-        // Ensure it takes space even if empty
+        // 비어있어도 공간을 차지하도록 설정
     }
     
     .logo-container {
@@ -131,7 +131,7 @@ function switchView(mode: ViewMode) {
         justify-content: center;
         
         .header-logo {
-            height: 90px; // 1.5x of 60px
+            height: 90px; // 기존 60px 대비 1.5배 확대
             filter: drop-shadow(0 0 5px rgba(58, 242, 255, 0.5));
         }
     }

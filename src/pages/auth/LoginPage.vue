@@ -74,6 +74,7 @@ onMounted(async () => {
     background-size: cover;
     background-position: center;
     position: relative;
+    overflow: hidden;
     
     .overlay {
         position: absolute;
@@ -88,9 +89,9 @@ onMounted(async () => {
     z-index: 2;
     display: flex;
     flex-direction: column;
-    gap: var(--space-8);
+    gap: calc(var(--gu) * 3);
     align-items: center;
-    min-width: 500px;
+    width: calc(var(--gu) * 40);
 }
 
 .brand {
@@ -98,9 +99,9 @@ onMounted(async () => {
     justify-content: center;
     
     .logo-img {
-        width: 600px;
+        width: calc(var(--gu) * 40);
         height: auto;
-        filter: drop-shadow(0 0 10px rgba(58, 242, 255, 0.5));
+        filter: drop-shadow(0 0 calc(var(--gu) * 0.6) rgba(58, 242, 255, 0.5));
     }
 }
 
@@ -108,7 +109,7 @@ onMounted(async () => {
     width: 100%;
     display: flex;
     flex-direction: column;
-    gap: var(--space-4);
+    gap: calc(var(--gu) * 1);
     align-items: center;
 }
 
@@ -116,9 +117,9 @@ onMounted(async () => {
     background-color: #FEE500;
     color: #000000;
     border: none;
-    padding: 18px var(--space-6);
+    padding: calc(var(--gu) * 1.1) calc(var(--gu) * 2);
     border-radius: var(--radius-md);
-    font-size: var(--fontSize-lg);
+    font-size: calc(var(--gu) * 1.1);
     font-weight: 700;
     cursor: pointer;
     width: 100%;
@@ -128,20 +129,20 @@ onMounted(async () => {
     transition: transform 0.2s, box-shadow 0.2s;
     
     &:hover { 
-        transform: scale(1.02); 
-        box-shadow: 0 0 20px rgba(254, 229, 0, 0.4);
+        transform: translateY(calc(var(--gu) * -0.125));
+        box-shadow: 0 0 calc(var(--gu) * 1.25) rgba(254, 229, 0, 0.4);
     }
 }
 
 .dev-button {
     width: 100%;
     background-color: transparent;
-    border: 1px solid var(--color-border-subtle);
+    border: calc(var(--gu) * 0.0625) solid var(--color-border-subtle);
     color: var(--color-text-muted);
-    padding: var(--space-2);
+    padding: calc(var(--gu) * 0.5);
     border-radius: var(--radius-sm);
     cursor: pointer;
-    font-size: var(--fontSize-sm);
+    font-size: calc(var(--gu) * 0.8);
     transition: all 0.2s;
     &:hover {
         border-color: var(--color-text-primary);
@@ -151,5 +152,6 @@ onMounted(async () => {
 
 .loading {
     color: var(--color-text-muted);
+    font-size: calc(var(--gu) * 1.1);
 }
 </style>

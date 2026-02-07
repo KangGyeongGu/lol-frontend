@@ -6,13 +6,15 @@ import type { UserSummary, SignupRequest } from '@/api/dtos/auth.types';
 
 export const useAuthStore = defineStore('auth', () => {
     const user = ref<UserSummary | null>(null);
-    const isAuthenticated = computed(() => !!tokenStorage.getAccessToken());
+    const accessToken = ref<string | null>(tokenStorage.getAccessToken());
+    const isAuthenticated = computed(() => !!accessToken.value);
 
     async function login(code: string) {
         try {
             const response = await authApi.login(code);
             if (response.result === 'OK' && response.accessToken && response.refreshToken && response.user) {
                 tokenStorage.setTokens(response.accessToken, response.refreshToken);
+                accessToken.value = response.accessToken;
                 user.value = response.user;
                 return { success: true };
             } else if (response.result === 'SIGNUP_REQUIRED' && response.signupToken) {
@@ -25,7 +27,9 @@ export const useAuthStore = defineStore('auth', () => {
     }
 
     async function mockLogin() {
-        tokenStorage.setTokens('mock-access-token', 'mock-refresh-token');
+        const mockAccess = 'mock-access-token';
+        tokenStorage.setTokens(mockAccess, 'mock-refresh-token');
+        accessToken.value = mockAccess;
         user.value = {
             userId: 'host-user-01',
             nickname: 'DevHost',
@@ -38,6 +42,7 @@ export const useAuthStore = defineStore('auth', () => {
     async function signup(req: SignupRequest) {
         const response = await authApi.signup(req);
         tokenStorage.setTokens(response.accessToken, response.refreshToken);
+        accessToken.value = response.accessToken;
         user.value = response.user;
     }
 
@@ -46,6 +51,7 @@ export const useAuthStore = defineStore('auth', () => {
             await authApi.logout();
         } finally {
             tokenStorage.clearTokens();
+            accessToken.value = null;
             user.value = null;
         }
     }

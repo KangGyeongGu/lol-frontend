@@ -4,13 +4,16 @@ import type {
     RoomDetail,
     PagedRoomList,
     GameType,
-    RoomLanguage
+    RoomLanguage,
+    RoomStatus
 } from '@/api/dtos/room.types';
 
 export interface RoomFilterParams {
     roomName?: string;
+    hostName?: string;
     language?: RoomLanguage;
     gameType?: GameType;
+    roomStatus?: RoomStatus;
     cursor?: string;
     limit?: number;
 }

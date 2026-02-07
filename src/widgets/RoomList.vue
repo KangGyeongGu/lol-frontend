@@ -50,8 +50,15 @@ const emit = defineEmits<{
             </div>
             
             <!-- 5. 참여 버튼 -->
-            <button class="join-btn" :disabled="!room.joinable" @click="emit('join', room.roomId)">
-                {{ room.joinable ? 'JOIN' : 'FULL' }}
+            <button 
+                class="join-btn" 
+                :class="{ 'in-game': room.roomStatus === 'IN_GAME' }"
+                :disabled="!room.joinable" 
+                @click="emit('join', room.roomId)"
+            >
+                <template v-if="room.roomStatus === 'IN_GAME'">IN GAME</template>
+                <template v-else-if="!room.joinable">FULL</template>
+                <template v-else>JOIN</template>
             </button>
         </div>
     </div>
@@ -75,13 +82,13 @@ const emit = defineEmits<{
 
 .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(calc(var(--gu) * 17.5), 1fr));
     gap: var(--space-6);
 }
 
 .room-card {
     background: rgba(18, 16, 30, 0.8);
-    border: 1px solid var(--color-border-subtle);
+    border: calc(var(--gu) * 0.0625) solid var(--color-border-subtle);
     border-radius: var(--radius-lg);
     padding: var(--space-5);
     display: flex;
@@ -94,7 +101,7 @@ const emit = defineEmits<{
     &:hover {
         transform: translateY(-4px);
         border-color: var(--color-accent-cyan);
-        box-shadow: 0 4px 20px rgba(58, 242, 255, 0.15);
+        box-shadow: 0 calc(var(--gu) * 0.25) calc(var(--gu) * 1.25) rgba(58, 242, 255, 0.15);
     }
 }
 
@@ -106,26 +113,26 @@ const emit = defineEmits<{
     .room-type-badge {
         background: rgba(58, 242, 255, 0.1);
         color: var(--color-accent-cyan);
-        font-size: 0.75rem;
+        font-size: calc(var(--gu) * 0.75);
         font-weight: 800;
-        padding: 4px 8px;
-        border-radius: 4px;
-        letter-spacing: 1px;
+        padding: calc(var(--gu) * 0.25) calc(var(--gu) * 0.5);
+        border-radius: calc(var(--gu) * 0.25);
+        letter-spacing: calc(var(--gu) * 0.0625);
     }
     
     .lang-badge {
         background: rgba(255, 255, 255, 0.1);
         color: var(--color-text-secondary);
-        font-size: 0.75rem;
+        font-size: calc(var(--gu) * 0.75);
         font-weight: bold;
-        padding: 4px 8px;
-        border-radius: 4px;
+        padding: calc(var(--gu) * 0.25) calc(var(--gu) * 0.5);
+        border-radius: calc(var(--gu) * 0.25);
         font-family: var(--font-mono);
     }
 }
 
 .room-title {
-    font-size: 1.25rem;
+    font-size: calc(var(--gu) * 1.25);
     color: white;
     font-weight: 700;
     margin: 0;
@@ -138,11 +145,11 @@ const emit = defineEmits<{
     display: flex;
     align-items: center;
     gap: var(--space-2);
-    font-size: 0.875rem;
+    font-size: calc(var(--gu) * 0.875);
     
     .label {
         color: var(--color-text-muted);
-        font-size: 0.75rem;
+        font-size: calc(var(--gu) * 0.75);
         font-weight: bold;
     }
     .name {
@@ -157,9 +164,9 @@ const emit = defineEmits<{
     margin-top: var(--space-2);
     
     .slot {
-        width: 24px;
-        height: 6px;
-        border-radius: 2px;
+        width: calc(var(--gu) * 1.5);
+        height: calc(var(--gu) * 0.375);
+        border-radius: calc(var(--gu) * 0.125);
         &.filled { background: var(--color-accent-cyan); box-shadow: 0 0 5px var(--color-accent-cyan); }
         &.empty { background: rgba(255, 255, 255, 0.1); }
     }
@@ -167,7 +174,7 @@ const emit = defineEmits<{
     .count {
         margin-left: auto;
         color: var(--color-text-muted);
-        font-size: 0.875rem;
+        font-size: calc(var(--gu) * 0.875);
         font-family: var(--font-mono);
     }
 }
@@ -177,8 +184,9 @@ const emit = defineEmits<{
     background: var(--color-accent-cyan);
     color: #000;
     border: none;
-    padding: 12px;
+    padding: calc(var(--gu) * 0.75);
     border-radius: var(--radius-sm);
+    font-size: calc(var(--gu) * 0.9);
     font-weight: 800;
     width: 100%;
     cursor: pointer;
@@ -188,7 +196,7 @@ const emit = defineEmits<{
     
     &:hover {
         background: #fff;
-        box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+        box-shadow: 0 0 calc(var(--gu) * 0.9375) rgba(255, 255, 255, 0.5);
     }
     
     &:active {
@@ -200,6 +208,12 @@ const emit = defineEmits<{
         color: var(--color-text-muted);
         cursor: not-allowed;
         box-shadow: none;
+
+        &.in-game {
+            background: rgba(255, 79, 216, 0.1);
+            color: var(--color-accent-magenta);
+            border: calc(var(--gu) * 0.0625) solid rgba(255, 79, 216, 0.3);
+        }
     }
 }
 </style>

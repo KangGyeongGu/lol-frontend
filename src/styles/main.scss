@@ -11,10 +11,29 @@
 
 :root {
   color-scheme: dark;
+
+  /* 
+     Global Unit (--gu): 1% of the 16:9 container's width.
+     Ensures all elements scale proportionally regardless of zoom level or window size.
+  */
+  --gu: 1vw;
+}
+
+@media (min-aspect-ratio: 16/9) {
+  :root {
+    --gu: calc(100vh * 16 / 900); // Height is the bottleneck (16/9 = 1.777)
+  }
+}
+
+@media (max-aspect-ratio: 16/9) {
+  :root {
+    --gu: 1vw; // Width is the bottleneck
+  }
 }
 
 body {
   font-family: var(--font-ui);
+  font-size: var(--fontSize-md);
   background-color: var(--color-bg-page);
   color: var(--color-text-primary);
   /* 

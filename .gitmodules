@@ -1,0 +1,6 @@
+[submodule "lol-ssot"]
+	path = lol-ssot
+	url = https://github.com/KangGyeongGu/lol-ssot.git
+[submodule "docs"]
+	path = docs
+	url = https://github.com/KangGyeongGu/lol-ssot.git

@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { useAuthStore } from '@/stores/useAuthStore';
+import ChatPanel from '@/features/chat/ui/ChatPanel.vue';
 import bannerLiveSrc from '@/assets/images/banner-live.png';
+
+const authStore = useAuthStore();
 
 // 허브 패널: 메인 대시보드 뷰
 const emit = defineEmits<{
@@ -13,7 +17,6 @@ const statTab = ref<'BANNED' | 'PICKED'>('BANNED');
 const statPage = ref(0);
 const playerPage = ref(0);
 
-// --- Mock 데이터 (임시 데이터) ---
 const bannedStats = ref([
     { rank: 1, name: 'Graph', val: '8%' },
     { rank: 2, name: 'DP', val: '8%' },
@@ -53,7 +56,6 @@ const topPlayers = ref([
     { rank: 10, name: 'Ivan', score: '2100' },
 ]);
 
-// --- 페이지네이션 계산 로직 ---
 const visibleStats = computed(() => {
     const source = statTab.value === 'BANNED' ? bannedStats.value : pickedStats.value;
     const start = statPage.value * 5;
@@ -65,8 +67,7 @@ const visiblePlayers = computed(() => {
     return topPlayers.value.slice(start, start + 5);
 });
 
-// --- 데이터 로테이션 로직 ---
-let timer: any;
+let timer: ReturnType<typeof setInterval> | undefined;
 onMounted(() => {
     timer = setInterval(() => {
         statPage.value = (statPage.value + 1) % 2;
@@ -102,11 +103,10 @@ onUnmounted(() => {
 
             <!-- 하단 고정 채팅 -->
             <div class="global-chat-dock">
-                <div class="chat-header">전체 채팅</div>
-                <div class="chat-input-area">
-                    <input type="text" placeholder="메시지를 입력하세요..." />
-                    <button>&gt;</button>
-                </div>
+                <ChatPanel 
+                    channel-id="global"
+                    :nickname="authStore.user?.nickname || 'Guest'" 
+                />
             </div>
         </section>
 
@@ -166,7 +166,7 @@ onUnmounted(() => {
 .main-section {
     grid-column: 1;
     display: grid;
-    grid-template-rows: minmax(300px, 40%) 80px 1fr;
+    grid-template-rows: minmax(calc(var(--gu) * 18.75), 40%) calc(var(--gu) * 5) 1fr;
     gap: var(--space-6);
 }
 
@@ -181,59 +181,17 @@ onUnmounted(() => {
 // 전체 채팅창 스타일
 .global-chat-dock {
     height: 100%; 
-    background: rgba(10, 10, 10, 0.7);
-    border: 1px solid var(--color-accent-yellow);
-    border-radius: var(--radius-lg);
-    display: flex;
-    flex-direction: column;
-    padding: var(--space-4);
-    backdrop-filter: blur(5px);
-}
-
-.chat-header {
-    font-size: var(--fontSize-sm);
-    color: var(--color-accent-yellow);
-    font-weight: bold;
-    margin-bottom: var(--space-2);
-}
-
-.chat-input-area {
-    margin-top: auto;
-    display: flex;
-    gap: var(--space-2);
-    
-    input {
-        flex: 1;
-        background: rgba(0, 0, 0, 0.5);
-        border: 1px solid var(--color-accent-cyan);
-        padding: var(--space-2);
-        border-radius: var(--radius-sm);
-        color: white;
-        
-        &:focus {
-            outline: none;
-            box-shadow: 0 0 5px var(--color-accent-cyan);
-        }
-    }
-    
-    button {
-        width: 40px;
-        background: var(--color-bg-panelStrong);
-        border: 1px solid var(--color-border-subtle);
-        color: var(--color-text-primary);
-        border-radius: var(--radius-sm);
-        cursor: pointer;
-    }
+    min-height: 0;
 }
 
 .hero-placeholder {
     background-size: cover;
     background-position: center;
-    border: 1px solid var(--color-border-cyan);
+    border: calc(var(--gu) * 0.0625) solid var(--color-border-cyan);
     border-radius: var(--radius-xl);
     position: relative;
     overflow: hidden;
-    box-shadow: 0 0 20px rgba(58, 242, 255, 0.1);
+    box-shadow: 0 0 calc(var(--gu) * 1.25) rgba(58, 242, 255, 0.1);
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
@@ -255,7 +213,7 @@ onUnmounted(() => {
     
     h1 {
         font-family: var(--font-display);
-        font-size: clamp(2rem, 3.5vw, 3.5rem);
+        font-size: calc(var(--gu) * 3.5);
         color: var(--color-accent-cyan);
         text-shadow: 0 0 10px rgba(58, 242, 255, 0.5);
         margin-bottom: var(--space-2);
@@ -276,7 +234,7 @@ onUnmounted(() => {
     
     .action-card {
         background: rgba(18, 16, 30, 0.6);
-        border: 1px solid var(--color-border-subtle);
+        border: calc(var(--gu) * 0.0625) solid var(--color-border-subtle);
         border-radius: var(--radius-lg);
         font-size: var(--fontSize-xl);
         font-weight: bold;
@@ -301,7 +259,7 @@ onUnmounted(() => {
 
 .ranking-panel {
     background: rgba(11, 8, 20, 0.8);
-    border: 2px solid #2d2445; 
+    border: calc(var(--gu) * 0.125) solid #2d2445; 
     border-radius: var(--radius-lg);
     padding: var(--space-4);
     box-shadow: 0 0 10px #7b2cbf40;
@@ -357,7 +315,7 @@ onUnmounted(() => {
             align-items: center;
             flex: 1;
             padding: 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            border-bottom: calc(var(--gu) * 0.0625) solid rgba(255, 255, 255, 0.05);
             font-family: var(--font-display);
             font-size: var(--fontSize-md);
             
@@ -367,7 +325,7 @@ onUnmounted(() => {
             
             .rank {
                 font-weight: bold;
-                width: 24px;
+                width: calc(var(--gu) * 1.5);
                 flex-shrink: 0;
                 color: var(--color-accent-cyan);
                 text-align: left;

@@ -26,10 +26,10 @@ const classes = computed(() => {
 
 <style scoped lang="scss">
 .base-badge {
-  padding: 0.6vh 1.2vw;
-  border-radius: 0.8vw;
+  padding: calc(var(--gu) * 0.33) calc(var(--gu) * 1.2);
+  border-radius: calc(var(--gu) * 0.8);
   font-weight: 800;
-  font-size: clamp(0.7rem, 1vw, 0.9rem);
+  font-size: calc(var(--gu) * 0.85);
   text-transform: uppercase;
   display: inline-flex;
   align-items: center;
@@ -40,33 +40,33 @@ const classes = computed(() => {
   // Variants
   &.variant-rank {
     background: linear-gradient(90deg, #FF4FD8 0%, #A855F7 100%);
-    border: 1px solid rgba(255, 79, 216, 0.5);
+    border: calc(var(--gu) * 0.0625) solid rgba(255, 79, 216, 0.5);
     color: white;
   }
 
   &.variant-normal {
     background: linear-gradient(90deg, #3AF2FF 0%, #2AB6C1 100%);
-    border: 1px solid rgba(58, 242, 255, 0.5);
+    border: calc(var(--gu) * 0.0625) solid rgba(58, 242, 255, 0.5);
     color: black;
   }
 
   &.variant-cyan {
     background: rgba(58, 242, 255, 0.1);
-    border: 1px solid var(--color-accent-cyan);
+    border: calc(var(--gu) * 0.0625) solid var(--color-accent-cyan);
     color: var(--color-accent-cyan);
-    padding: 2px 8px;
-    border-radius: 0.4vw;
+    padding: calc(var(--gu) * 0.125) calc(var(--gu) * 0.5);
+    border-radius: calc(var(--gu) * 0.4);
   }
 
   &.variant-host {
     background: rgba(0, 0, 0, 0.4);
-    border: 1px solid var(--color-accent-yellow);
+    border: calc(var(--gu) * 0.0625) solid var(--color-accent-yellow);
     color: var(--color-accent-yellow);
   }
 
   &.variant-default {
     background: rgba(255, 255, 255, 0.1);
-    border: 1px solid var(--color-border-subtle);
+    border: calc(var(--gu) * 0.0625) solid var(--color-border-subtle);
     color: var(--color-text-secondary);
   }
 }

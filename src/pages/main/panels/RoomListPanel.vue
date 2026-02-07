@@ -3,7 +3,7 @@ import { ref, onMounted, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useRoomStore } from '@/stores/useRoomStore';
 import RoomList from '@/widgets/RoomList.vue';
-import type { GameType, RoomLanguage } from '@/api/dtos/room.types';
+import type { GameType, RoomLanguage, RoomStatus } from '@/api/dtos/room.types';
 import type { RoomFilterParams } from '@/api/room';
 
 const emit = defineEmits<{
@@ -14,21 +14,19 @@ const emit = defineEmits<{
 const roomStore = useRoomStore();
 const router = useRouter();
 
-// 페이지네이션 상태
 const currentPage = ref(1);
 const roomsPerPage = 10;
 
-// 필터 상태
 const searchQuery = ref('');
 const searchTarget = ref<'TITLE' | 'HOST'>('TITLE');
-const selectedLanguage = ref<string>('ALL');
-const selectedMode = ref<string>('ALL'); 
-const selectedStatus = ref<string>('ALL'); 
+const selectedLanguage = ref<RoomLanguage | 'ALL'>('ALL');
+const selectedMode = ref<GameType | 'ALL'>('ALL'); 
+const selectedStatus = ref<RoomStatus | 'ALL'>('ALL'); 
 const activeDropdown = ref<'LANG' | 'MODE' | 'STATUS' | 'SEARCH_BY' | null>(null);
 
-const languages = ['ALL', 'JAVA', 'PYTHON', 'CPP', 'JAVASCRIPT'];
-const modes = ['ALL', 'RANKED', 'NORMAL'];
-const statuses = [
+const languages: (RoomLanguage | 'ALL')[] = ['ALL', 'JAVA', 'PYTHON', 'CPP', 'JAVASCRIPT'];
+const modes: (GameType | 'ALL')[] = ['ALL', 'RANKED', 'NORMAL'];
+const statuses: { label: string, value: RoomStatus | 'ALL' }[] = [
     { label: 'ALL ROOMS', value: 'ALL' },
     { label: 'AVAILABLE', value: 'WAITING' },
     { label: 'IN-GAME', value: 'IN_GAME' }
@@ -46,8 +44,6 @@ function resetFilters() {
     selectedStatus.value = 'ALL';
 }
 
-// 클라이언트 사이드 필터링 및 페이지네이션 로직
-// 참고: 실무에서는 API 파라미터를 통해 서버 사이드에서 처리하는 것이 일반적임
 const filteredRooms = computed(() => {
     return roomStore.rooms.filter(room => {
         // 검색어 필터
@@ -92,12 +88,21 @@ function setPage(page: number) {
 
 // 방 목록 새로고침 (API 호출)
 async function refreshRooms() {
-    const params: RoomFilterParams = {};
-    if (searchQuery.value && searchTarget.value === 'TITLE') {
-        params.roomName = searchQuery.value;
+    const params: RoomFilterParams = {
+        limit: 20
+    };
+    
+    if (searchQuery.value) {
+        if (searchTarget.value === 'TITLE') {
+            params.roomName = searchQuery.value;
+        } else {
+            params.hostName = searchQuery.value;
+        }
     }
+    
     if (selectedLanguage.value !== 'ALL') params.language = selectedLanguage.value as RoomLanguage;
     if (selectedMode.value !== 'ALL') params.gameType = selectedMode.value as GameType;
+    if (selectedStatus.value !== 'ALL') params.roomStatus = selectedStatus.value as RoomStatus;
     
     await roomStore.fetchRooms(params);
 }
@@ -111,7 +116,6 @@ onMounted(() => {
     refreshRooms();
 });
 
-// 방 참가 처리
 async function handleJoinRoom(roomId: string) {
     try {
         const roomDetail = await roomStore.joinRoom(roomId);
@@ -259,9 +263,9 @@ async function handleJoinRoom(roomId: string) {
         background: rgba(58, 242, 255, 0.05);
         border: 1px solid rgba(58, 242, 255, 0.3);
         color: var(--color-accent-cyan);
-        width: 48px; height: 48px;
-        border-radius: 12px;
-        font-size: 1.5rem;
+        width: calc(var(--gu) * 3); height: calc(var(--gu) * 3);
+        border-radius: calc(var(--gu) * 0.75);
+        font-size: calc(var(--gu) * 1.5);
         cursor: pointer;
         display: flex; align-items: center; justify-content: center;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -277,27 +281,27 @@ async function handleJoinRoom(roomId: string) {
     
     .title {
         font-family: var(--font-display);
-        font-size: 3rem;
+        font-size: calc(var(--gu) * 3);
         background: linear-gradient(135deg, #3AF2FF 0%, #FF4FD8 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        text-shadow: 0 0 30px rgba(58, 242, 255, 0.2);
-        letter-spacing: -1px;
+        text-shadow: 0 0 calc(var(--gu) * 1.875) rgba(58, 242, 255, 0.2);
+        letter-spacing: calc(var(--gu) * -0.06);
     }
     .spacer { flex: 1; }
 }
 
 .filter-bar {
     background: rgba(18, 16, 30, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 20px;
+    border: calc(var(--gu) * 0.0625) solid rgba(255, 255, 255, 0.08);
+    border-radius: calc(var(--gu) * 1.25);
     padding: var(--space-4) var(--space-6);
     display: flex;
     justify-content: space-between;
     align-items: center;
     backdrop-filter: blur(20px);
     margin-bottom: var(--space-4);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+    box-shadow: 0 calc(var(--gu) * 0.5) calc(var(--gu) * 2) rgba(0, 0, 0, 0.4), inset 0 calc(var(--gu) * 0.0625) calc(var(--gu) * 0.0625) rgba(255, 255, 255, 0.05);
     z-index: 100;
     
     .action-group {
@@ -309,19 +313,19 @@ async function handleJoinRoom(roomId: string) {
             background: linear-gradient(135deg, var(--color-accent-cyan) 0%, #2AB6C1 100%);
             border: none;
             color: black;
-            padding: 12px 28px;
-            border-radius: 12px;
+            padding: calc(var(--gu) * 0.75) calc(var(--gu) * 1.75);
+            border-radius: calc(var(--gu) * 0.75);
             font-family: var(--font-display);
             font-weight: 800;
             text-transform: uppercase;
-            font-size: 0.9rem;
+            font-size: calc(var(--gu) * 0.9);
             cursor: pointer;
             transition: all 0.3s;
             display: flex;
             align-items: center;
             gap: 10px;
             
-            .plus-icon { font-size: 1.2rem; margin-top: -2px; }
+            .plus-icon { font-size: calc(var(--gu) * 1.2); margin-top: calc(var(--gu) * -0.125); }
             &:hover {
                transform: translateY(-2px);
                box-shadow: 0 0 20px rgba(58, 242, 255, 0.4);
@@ -333,13 +337,13 @@ async function handleJoinRoom(roomId: string) {
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
             color: var(--color-text-secondary);
-            width: 48px; height: 48px; border-radius: 12px;
+            width: calc(var(--gu) * 3); height: calc(var(--gu) * 3); border-radius: calc(var(--gu) * 0.75);
             cursor: pointer;
             display: flex; align-items: center; justify-content: center;
             transition: all 0.3s;
 
             .refresh-icon {
-                font-size: 1.8rem;
+                font-size: calc(var(--gu) * 1.8);
                 display: inline-block;
                 &.rotating { animation: spin 1s linear infinite; }
             }
@@ -358,11 +362,11 @@ async function handleJoinRoom(roomId: string) {
         align-items: center;
         gap: var(--space-3);
         background: rgba(0, 0, 0, 0.2);
-        padding: 6px 14px;
-        border-radius: 14px;
+        padding: calc(var(--gu) * 0.375) calc(var(--gu) * 0.875);
+        border-radius: calc(var(--gu) * 0.875);
         
         .group-label {
-            font-size: 0.65rem;
+            font-size: calc(var(--gu) * 0.65);
             font-weight: 800;
             color: var(--color-text-muted);
             letter-spacing: 1.5px;
@@ -413,9 +417,9 @@ async function handleJoinRoom(roomId: string) {
     background: rgba(255, 79, 216, 0.05);
     border: 1px solid rgba(255, 79, 216, 0.2);
     color: var(--color-accent-magenta);
-    padding: 8px 14px;
-    border-radius: 10px;
-    font-size: 0.75rem;
+    padding: calc(var(--gu) * 0.5) calc(var(--gu) * 0.875);
+    border-radius: calc(var(--gu) * 0.625);
+    font-size: calc(var(--gu) * 0.75);
     font-family: var(--font-display);
     font-weight: 700;
     text-transform: uppercase;
@@ -425,7 +429,7 @@ async function handleJoinRoom(roomId: string) {
     align-items: center;
     gap: 6px;
 
-    span { font-size: 0.5rem; opacity: 0.5; transition: 0.3s; }
+    span { font-size: calc(var(--gu) * 0.5); opacity: 0.5; transition: 0.3s; }
     &.active {
         background: rgba(255, 79, 216, 0.15);
         box-shadow: 0 0 15px rgba(255, 79, 216, 0.3);
@@ -441,8 +445,8 @@ async function handleJoinRoom(roomId: string) {
     min-width: 140px;
     background: rgba(20, 18, 30, 0.95);
     border: 1px solid rgba(255, 79, 216, 0.2);
-    border-radius: 12px;
-    padding: 6px;
+    border-radius: calc(var(--gu) * 0.75);
+    padding: calc(var(--gu) * 0.375);
     backdrop-filter: blur(20px);
     z-index: 200;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
@@ -456,9 +460,9 @@ async function handleJoinRoom(roomId: string) {
         border: none;
         color: var(--color-text-secondary);
         padding: 8px 12px;
-        border-radius: 8px;
+        border-radius: calc(var(--gu) * 0.5);
         font-family: var(--font-display);
-        font-size: 0.8rem;
+        font-size: calc(var(--gu) * 0.8);
         cursor: pointer;
         transition: 0.2s;
 
@@ -475,7 +479,7 @@ async function handleJoinRoom(roomId: string) {
     .search-wrapper {
         background: rgba(0, 0, 0, 0.3);
         border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 12px;
+        border-radius: calc(var(--gu) * 0.75);
         display: flex;
         align-items: center;
         padding-left: 4px;
@@ -491,9 +495,9 @@ async function handleJoinRoom(roomId: string) {
                 background: rgba(255, 255, 255, 0.05);
                 border: none;
                 color: var(--color-text-muted);
-                padding: 6px 12px;
-                border-radius: 8px;
-                font-size: 0.7rem;
+                padding: calc(var(--gu) * 0.375) calc(var(--gu) * 0.75);
+                border-radius: calc(var(--gu) * 0.5);
+                font-size: calc(var(--gu) * 0.7);
                 font-weight: 800;
                 cursor: pointer;
                 display: flex; align-items: center; gap: 4px;
@@ -505,14 +509,14 @@ async function handleJoinRoom(roomId: string) {
         input {
             background: transparent;
             border: none;
-            padding: 10px 12px;
+            padding: calc(var(--gu) * 0.625) calc(var(--gu) * 0.75);
             color: white;
-            width: 180px;
+            width: calc(var(--gu) * 11.25);
             font-family: var(--font-ui);
-            font-size: 0.85rem;
+            font-size: calc(var(--gu) * 0.85);
             
             &::placeholder { color: rgba(255, 255, 255, 0.3); }
-            &:focus { outline: none; width: 220px; }
+            &:focus { outline: none; width: calc(var(--gu) * 13.75); }
         }
     }
 }
@@ -529,8 +533,8 @@ async function handleJoinRoom(roomId: string) {
         align-items: center;
         gap: var(--space-4);
         background: rgba(255, 255, 255, 0.02);
-        padding: 4px 12px;
-        border-radius: 99px;
+        padding: calc(var(--gu) * 0.25) calc(var(--gu) * 0.75);
+        border-radius: calc(var(--gu) * 6.18);
         border: 1px solid rgba(255, 255, 255, 0.05);
 
         .page-nav {
@@ -549,7 +553,7 @@ async function handleJoinRoom(roomId: string) {
         .page-dots {
             display: flex; gap: 8px;
             .dot {
-                width: 6px; height: 6px; background: rgba(255, 255, 255, 0.15); border-radius: 50%;
+                width: calc(var(--gu) * 0.375); height: calc(var(--gu) * 0.375); background: rgba(255, 255, 255, 0.15); border-radius: 50%;
                 cursor: pointer;
                 &.active { background: var(--color-accent-cyan); box-shadow: 0 0 10px var(--color-accent-cyan); transform: scale(1.3); }
             }
@@ -558,7 +562,7 @@ async function handleJoinRoom(roomId: string) {
 
     .room-count {
         position: absolute; right: 0;
-        font-size: 0.7rem; font-weight: 600; color: var(--color-text-muted);
+        font-size: calc(var(--gu) * 0.7); font-weight: 600; color: var(--color-text-muted);
         display: flex; align-items: center; gap: 8px;
         .highlight { color: var(--color-accent-cyan); font-family: var(--font-mono); }
     }
@@ -568,8 +572,8 @@ async function handleJoinRoom(roomId: string) {
     flex: 1; overflow: hidden; display: flex; flex-direction: column;
     .no-results {
         flex: 1; display: flex; align-items: center; justify-content: center;
-        color: var(--color-text-muted); font-size: 1.1rem;
-        background: rgba(255, 255, 255, 0.02); border-radius: 20px; border: 1px dashed rgba(255, 255, 255, 0.1);
+        color: var(--color-text-muted); font-size: calc(var(--gu) * 1.1);
+        background: rgba(255, 255, 255, 0.02); border-radius: calc(var(--gu) * 1.25); border: calc(var(--gu) * 0.0625) dashed rgba(255, 255, 255, 0.1);
     }
 }
 

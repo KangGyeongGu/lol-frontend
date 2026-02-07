@@ -41,27 +41,27 @@ const classes = computed(() => {
 .base-button {
   font-family: var(--font-display);
   font-weight: 800;
-  border-radius: 0.8vw;
+  border-radius: calc(var(--gu) * 0.8);
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: calc(var(--gu) * 0.06);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid transparent; // 기본 border 영역 확보
+  border: calc(var(--gu) * 0.125) solid transparent; // 기본 border 영역 확보
 
   // Sizes
   &.size-md {
-    font-size: clamp(0.9rem, 1.3vw, 1.3rem);
-    padding: 0.8vh 2.5vw;
+    font-size: calc(var(--gu) * 1.1);
+    padding: calc(var(--gu) * 0.45) calc(var(--gu) * 2.5);
   }
 
   &.size-sm {
     font-size: var(--fontSize-sm);
-    padding: 6px 16px;
+    padding: calc(var(--gu) * 0.375) var(--gu);
     border-radius: var(--radius-sm);
-    border-width: 1px;
+    border-width: calc(var(--gu) * 0.0625);
   }
 
   // Variants
@@ -72,7 +72,7 @@ const classes = computed(() => {
     
     &:not(:disabled):hover {
       transform: translateY(-2px);
-      box-shadow: 0 0 20px rgba(255, 210, 72, 0.4);
+      box-shadow: 0 0 calc(var(--gu) * 1.25) rgba(255, 210, 72, 0.4);
       filter: brightness(1.1);
     }
   }

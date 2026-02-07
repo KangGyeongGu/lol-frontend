@@ -34,7 +34,6 @@ function submit() {
 <template>
   <div class="modal-overlay" @click.self="emit('close')">
     <div class="modal-container">
-        <!-- 배경 디자인: 대각선 스트라이프 패턴 -->
         <div class="stripes-bg"></div>
 
         <header class="modal-header">
@@ -43,7 +42,6 @@ function submit() {
         </header>
         
         <div class="modal-body">
-            <!-- 필드 1: 방 이름 입력 -->
             <div class="form-section">
                 <div class="section-header">
                     <label>방 이름</label>
@@ -54,7 +52,6 @@ function submit() {
                 </div>
             </div>
             
-            <!-- 필드 2: 게임 타입 선택 (랭크/일반) -->
             <div class="mode-toggle-group">
                 <button 
                     class="mode-btn ranked" 
@@ -72,7 +69,6 @@ function submit() {
                 </button>
             </div>
             
-            <!-- 필드 3: 참여 인원 설정 -->
             <div class="form-section">
                 <label>참가 인원</label>
                 <div class="pill-group">
@@ -86,13 +82,11 @@ function submit() {
                         {{ count }}명
                     </button>
                 </div>
-                <!-- 시각적 인디케이터 (진척도 바 스타일) -->
                 <div class="progress-track">
                     <div class="progress-fill" :style="{ width: `${((maxPlayers - 2) / 4) * 100}%` }"></div>
                 </div>
             </div>
 
-            <!-- 필드 4: 언어 선택 -->
             <div class="form-section">
                 <label>사용 언어</label>
                 <div class="lang-grid">

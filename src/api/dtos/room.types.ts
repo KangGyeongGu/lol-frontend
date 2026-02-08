@@ -1,17 +1,28 @@
 export type GameType = 'NORMAL' | 'RANKED';
-export type RoomLanguage = 'JAVA' | 'PYTHON' | 'CPP' | 'JAVASCRIPT';
+export type Language = 'JAVA' | 'PYTHON' | 'CPP' | 'JAVASCRIPT';
+export type PlayerState = 'READY' | 'UNREADY' | 'DISCONNECTED';
+export type GameStage = 'LOBBY' | 'BAN' | 'PICK' | 'SHOP' | 'PLAY' | 'FINISHED';
 export type RoomStatus = 'WAITING' | 'IN_GAME';
+export type PageRoute = 'WAITING_ROOM' | 'BAN_PICK_SHOP' | 'IN_GAME';
+export type MatchResult = 'WIN' | 'LOSE' | 'DRAW';
 
 export interface PageCursor {
     limit: number;
     nextCursor: string | null;
 }
 
+export interface UserSummary {
+    userId: string;
+    nickname: string;
+    tier: string;
+    score: number;
+}
+
 export interface RoomSummary {
     roomId: string;
     roomName: string;
     gameType: GameType;
-    language: RoomLanguage;
+    language: Language;
     maxPlayers: number;
     currentPlayers: number;
     roomStatus: RoomStatus;
@@ -28,18 +39,13 @@ export interface PagedRoomList {
 export interface CreateRoomRequest {
     roomName: string;
     gameType: GameType;
-    language: RoomLanguage;
+    language: Language;
     maxPlayers: number;
 }
 
 export interface RoomPlayer {
-    user: {
-        userId: string;
-        nickname: string;
-        tier: string;
-        score: number;
-    };
-    state: 'READY' | 'UNREADY' | 'DISCONNECTED';
+    user: UserSummary;
+    state: PlayerState;
     isHost: boolean;
 }
 
@@ -47,7 +53,7 @@ export interface RoomDetail {
     roomId: string;
     roomName: string;
     gameType: GameType;
-    language: RoomLanguage;
+    language: Language;
     maxPlayers: number;
     players: RoomPlayer[];
 }

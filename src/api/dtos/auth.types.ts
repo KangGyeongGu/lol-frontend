@@ -30,3 +30,12 @@ export interface SignupResponse {
     refreshToken: string;
     user: UserSummary;
 }
+export interface UserProfile {
+    userId: string;
+    nickname: string;
+    language: string;
+    tier: string;
+    score: number;
+    exp: number;
+    coin: number;
+}

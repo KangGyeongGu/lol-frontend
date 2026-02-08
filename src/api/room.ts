@@ -4,14 +4,14 @@ import type {
     RoomDetail,
     PagedRoomList,
     GameType,
-    RoomLanguage,
+    Language,
     RoomStatus
 } from '@/api/dtos/room.types';
 
 export interface RoomFilterParams {
     roomName?: string;
     hostName?: string;
-    language?: RoomLanguage;
+    language?: Language;
     gameType?: GameType;
     roomStatus?: RoomStatus;
     cursor?: string;
@@ -52,5 +52,33 @@ export const roomApi = {
      */
     leaveRoom: (roomId: string) => {
         return apiClient.post<any, void>(`/rooms/${roomId}/leave`);
+    },
+
+    /**
+     * READY 상태 전환
+     */
+    ready: (roomId: string) => {
+        return apiClient.post<any, RoomDetail>(`/rooms/${roomId}/ready`);
+    },
+
+    /**
+     * UNREADY 상태 전환
+     */
+    unready: (roomId: string) => {
+        return apiClient.post<any, RoomDetail>(`/rooms/${roomId}/unready`);
+    },
+
+    /**
+     * 게임 시작 (방장 전용)
+     */
+    startGame: (roomId: string) => {
+        return apiClient.post<any, any>(`/rooms/${roomId}/start`);
+    },
+
+    /**
+     * 플레이어 강퇴 (방장 전용)
+     */
+    kickPlayer: (roomId: string, targetUserId: string) => {
+        return apiClient.post<any, RoomDetail>(`/rooms/${roomId}/kick`, { targetUserId });
     }
 };

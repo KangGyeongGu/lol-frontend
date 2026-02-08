@@ -1,0 +1,224 @@
+import { defineStore } from 'pinia';
+import { ref, computed } from 'vue';
+import { gameApi } from '@/api/game';
+import { useServerClock } from '@/shared/composables/useServerClock';
+import type { BanPickRequest, ShopItemRequest, ShopSpellRequest } from '@/api/dtos/game.dto';
+import {
+    toGameStateViewModel,
+    toStageChangedViewModel,
+    toBanSubmittedViewModel,
+    toPickSubmittedViewModel,
+    toItemPurchasedViewModel,
+    toSpellPurchasedViewModel,
+    toGameFinishedViewModel,
+    toInventoryViewModel,
+    type GameStateViewModel,
+    type StageChangedViewModel,
+    type GameFinishedViewModel,
+} from '@/entities/game.model';
+import type { GameStage } from '@/api/dtos/room.dto';
+import type {
+    GameStageChangedEvent,
+    GameBanSubmittedEvent,
+    GamePickSubmittedEvent,
+    GameItemPurchasedEvent,
+    GameSpellPurchasedEvent,
+    GameFinishedEvent,
+    Inventory,
+} from '@/api/dtos/game.dto';
+
+export interface BanPickEntry {
+    userId: string;
+    algorithmId: string;
+}
+
+export const useGameStore = defineStore('game', () => {
+    const gameState = ref<GameStateViewModel | null>(null);
+    const stageDeadlineAt = ref<string | null>(null);
+    const bans = ref<BanPickEntry[]>([]);
+    const picks = ref<BanPickEntry[]>([]);
+    const gameResult = ref<GameFinishedViewModel | null>(null);
+    const isLoading = ref(false);
+
+    const stage = computed<GameStage | null>(() => gameState.value?.stage ?? null);
+    const gameId = computed<string | null>(() => gameState.value?.gameId ?? null);
+    const roomId = computed<string | null>(() => gameState.value?.roomId ?? null);
+
+    // --- REST Actions ---
+
+    async function fetchGameState(id: string) {
+        isLoading.value = true;
+        try {
+            const dto = await gameApi.getGameState(id);
+            gameState.value = toGameStateViewModel(dto);
+            // remainingMs로 stageDeadlineAt 역산 (WS GAME_STAGE_CHANGED 도착 전 부트스트랩)
+            if (dto.remainingMs > 0) {
+                const serverClock = useServerClock();
+                stageDeadlineAt.value = new Date(
+                    serverClock.estimatedServerNow() + dto.remainingMs,
+                ).toISOString();
+            }
+        } catch (error) {
+            console.error('[GameStore] Fetch state error:', error);
+            throw error;
+        } finally {
+            isLoading.value = false;
+        }
+    }
+
+    async function submitBan(id: string, req: BanPickRequest): Promise<GameStateViewModel> {
+        try {
+            const dto = await gameApi.submitBan(id, req);
+            gameState.value = toGameStateViewModel(dto);
+            return gameState.value;
+        } catch (error) {
+            console.error('[GameStore] Submit ban error:', error);
+            throw error;
+        }
+    }
+
+    async function submitPick(id: string, req: BanPickRequest): Promise<GameStateViewModel> {
+        try {
+            const dto = await gameApi.submitPick(id, req);
+            gameState.value = toGameStateViewModel(dto);
+            return gameState.value;
+        } catch (error) {
+            console.error('[GameStore] Submit pick error:', error);
+            throw error;
+        }
+    }
+
+    async function purchaseItem(id: string, req: ShopItemRequest): Promise<GameStateViewModel> {
+        try {
+            const dto = await gameApi.purchaseItem(id, req);
+            gameState.value = toGameStateViewModel(dto);
+            return gameState.value;
+        } catch (error) {
+            console.error('[GameStore] Purchase item error:', error);
+            throw error;
+        }
+    }
+
+    async function purchaseSpell(id: string, req: ShopSpellRequest): Promise<GameStateViewModel> {
+        try {
+            const dto = await gameApi.purchaseSpell(id, req);
+            gameState.value = toGameStateViewModel(dto);
+            return gameState.value;
+        } catch (error) {
+            console.error('[GameStore] Purchase spell error:', error);
+            throw error;
+        }
+    }
+
+    // --- Real-time Event Handlers ---
+
+    function handleStageChanged(data: GameStageChangedEvent) {
+        const vm = toStageChangedViewModel(data);
+        stageDeadlineAt.value = vm.stageDeadlineAt;
+
+        if (gameState.value) {
+            gameState.value = {
+                ...gameState.value,
+                stage: vm.stage,
+                gameType: vm.gameType,
+                remainingMs: vm.remainingMs,
+            };
+        }
+
+        // 새 단계 진입 시 밴/픽 목록 초기화
+        if (vm.stage === 'BAN') {
+            bans.value = [];
+        } else if (vm.stage === 'PICK') {
+            picks.value = [];
+        }
+    }
+
+    function handleBanSubmitted(data: GameBanSubmittedEvent) {
+        const vm = toBanSubmittedViewModel(data);
+        bans.value = [...bans.value, { userId: vm.userId, algorithmId: vm.algorithmId }];
+    }
+
+    function handlePickSubmitted(data: GamePickSubmittedEvent) {
+        const vm = toPickSubmittedViewModel(data);
+        picks.value = [...picks.value, { userId: vm.userId, algorithmId: vm.algorithmId }];
+    }
+
+    function handleItemPurchased(data: GameItemPurchasedEvent) {
+        const vm = toItemPurchasedViewModel(data);
+        if (gameState.value) {
+            gameState.value = {
+                ...gameState.value,
+                coin: gameState.value.coin - vm.totalPrice,
+            };
+        }
+    }
+
+    function handleSpellPurchased(data: GameSpellPurchasedEvent) {
+        const vm = toSpellPurchasedViewModel(data);
+        if (gameState.value) {
+            gameState.value = {
+                ...gameState.value,
+                coin: gameState.value.coin - vm.totalPrice,
+            };
+        }
+    }
+
+    function handleInventorySync(inventory: Inventory) {
+        if (gameState.value) {
+            gameState.value = {
+                ...gameState.value,
+                inventory: toInventoryViewModel(inventory),
+            };
+        }
+    }
+
+    function handleGameFinished(data: GameFinishedEvent) {
+        gameResult.value = toGameFinishedViewModel(data);
+        if (gameState.value) {
+            gameState.value = { ...gameState.value, stage: 'FINISHED' };
+        }
+    }
+
+    function reset() {
+        gameState.value = null;
+        stageDeadlineAt.value = null;
+        bans.value = [];
+        picks.value = [];
+        gameResult.value = null;
+        isLoading.value = false;
+    }
+
+    return {
+        // State
+        gameState,
+        stageDeadlineAt,
+        bans,
+        picks,
+        gameResult,
+        isLoading,
+
+        // Computed
+        stage,
+        gameId,
+        roomId,
+
+        // REST Actions
+        fetchGameState,
+        submitBan,
+        submitPick,
+        purchaseItem,
+        purchaseSpell,
+
+        // Event Handlers
+        handleStageChanged,
+        handleBanSubmitted,
+        handlePickSubmitted,
+        handleItemPurchased,
+        handleSpellPurchased,
+        handleInventorySync,
+        handleGameFinished,
+
+        // Cleanup
+        reset,
+    };
+});

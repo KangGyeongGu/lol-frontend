@@ -1,16 +1,15 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import { stompClient } from '@/api/realtime/StompClient';
+import { EventDispatcher } from '@/realtime/EventDispatcher';
 import { useAuthStore } from '@/stores/useAuthStore';
+import type { ChatMessage } from '@/api/dtos/chat.dto';
 
-export interface ChatMessage {
-    id: string;
-    sender: string;
-    content: string;
-    timestamp: string;
-    isMe: boolean;
-}
-
+/**
+ * useChatStore manages chat messages for multiple channels.
+ * - Stores messages per channel (global, room-specific)
+ * - Sends messages via EventDispatcher (not direct WebSocket)
+ * - Receives messages from EventDispatcher subscriptions
+ */
 export const useChatStore = defineStore('chat', () => {
     const messages = ref<Record<string, ChatMessage[]>>({});
     const authStore = useAuthStore();
@@ -24,25 +23,14 @@ export const useChatStore = defineStore('chat', () => {
     }
 
     /**
-     * Send message to server via WebSocket
+     * Send message to server via EventDispatcher
      */
     function publishMessage(channelId: string, content: string) {
-        const isGlobal = channelId === 'global';
-        const payload = {
-            type: 'CHAT_SEND',
-            data: {
-                channelType: isGlobal ? 'GLOBAL' : 'INGAME',
-                roomId: isGlobal ? null : channelId.replace('room-', ''),
-                message: content,
-                clientMessageId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-            }
-        };
-
-        stompClient.send('/app/chat.send', payload);
+        EventDispatcher.sendChatMessage(channelId, content);
     }
 
     /**
-     * Handle incoming message from WebSocket
+     * Handle incoming message from WebSocket (called by EventDispatcher)
      */
     function receiveMessage(channelId: string, content: string, sender: string) {
         const id = channelId === 'global' ? 'global' : channelId;

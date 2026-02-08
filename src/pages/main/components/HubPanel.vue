@@ -8,7 +8,6 @@ import bannerLiveSrc from '@/assets/images/banner-live.png';
 const authStore = useAuthStore();
 const statsStore = useStatsStore();
 
-// 허브 패널: 메인 대시보드 뷰
 const emit = defineEmits<{
   (e: 'navigate', view: 'ROOM_LIST'): void;
   (e: 'create'): void;
@@ -52,14 +51,14 @@ const visiblePlayers = computed(() => {
 
 let timer: ReturnType<typeof setInterval> | undefined;
 onMounted(async () => {
-    // 초대 데이터 로드
+    // 초기 데이터 로드
     statsStore.fetchRankings();
     statsStore.fetchPickBanRates();
 
     timer = setInterval(() => {
         statPage.value = (statPage.value + 1) % 2;
         playerPage.value = (playerPage.value + 1) % 2;
-    }, 5000); // 5초마다 교체
+    }, 5000);
 });
 
 onUnmounted(() => {
@@ -78,7 +77,7 @@ onUnmounted(() => {
                 </div>
                 <div class="hero-overlay"></div>
             </div>
-            
+
             <div class="action-row">
                 <button class="action-card create" @click="emit('create')">
                     <span class="label">대전 생성</span>
@@ -90,9 +89,9 @@ onUnmounted(() => {
 
             <!-- 하단 고정 채팅 -->
             <div class="global-chat-dock">
-                <ChatPanel 
+                <ChatPanel
                     channel-id="global"
-                    :nickname="authStore.user?.nickname || 'Guest'" 
+                    :nickname="authStore.user?.nickname || 'Guest'"
                 />
             </div>
         </section>
@@ -102,14 +101,14 @@ onUnmounted(() => {
             <!-- 통계 패널 (Banned / Picked) -->
             <div class="ranking-panel">
                 <div class="tabs">
-                    <button 
-                        :class="{ active: statTab === 'BANNED' }" 
+                    <button
+                        :class="{ active: statTab === 'BANNED' }"
                         @click="statTab = 'BANNED'; statPage = 0"
                     >
                         Most Banned
                     </button>
-                    <button 
-                        :class="{ active: statTab === 'PICKED' }" 
+                    <button
+                        :class="{ active: statTab === 'PICKED' }"
                         @click="statTab = 'PICKED'; statPage = 0"
                     >
                         Most Picked
@@ -117,13 +116,13 @@ onUnmounted(() => {
                 </div>
                 <ul>
                     <li v-for="item in visibleStats" :key="item.rank">
-                        <span class="rank">{{ item.rank }}</span> 
-                        <span class="name">{{ item.name }}</span> 
+                        <span class="rank">{{ item.rank }}</span>
+                        <span class="name">{{ item.name }}</span>
                         <span class="pct">{{ item.val }}</span>
                     </li>
                 </ul>
             </div>
-            
+
             <!-- 상위 플레이어 패널 -->
              <div class="ranking-panel players">
                 <h3>Top Players</h3>
@@ -131,8 +130,8 @@ onUnmounted(() => {
                     <li v-for="player in visiblePlayers" :key="player.rank">
                         <span class="rank" :class="{ gold: player.rank===1, silver: player.rank===2 }">
                             {{ player.rank }}
-                        </span> 
-                        <span class="name">{{ player.name }}</span> 
+                        </span>
+                        <span class="name">{{ player.name }}</span>
                         <span class="score">{{ player.score }}</span>
                     </li>
                 </ul>
@@ -167,7 +166,7 @@ onUnmounted(() => {
 
 // 전체 채팅창 스타일
 .global-chat-dock {
-    height: 100%; 
+    height: 100%;
     min-height: 0;
 }
 
@@ -197,7 +196,7 @@ onUnmounted(() => {
         z-index: 2;
         margin-top: var(--space-4);
     }
-    
+
     h1 {
         font-family: var(--font-display);
         font-size: calc(var(--gu) * 3.5);
@@ -206,7 +205,7 @@ onUnmounted(() => {
         margin-bottom: var(--space-2);
         max-width: 80%;
     }
-    
+
     p {
         font-size: var(--fontSize-lg);
         color: var(--color-text-primary);
@@ -218,7 +217,7 @@ onUnmounted(() => {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: var(--space-6);
-    
+
     .action-card {
         background: rgba(18, 16, 30, 0.6);
         border: calc(var(--gu) * 0.0625) solid var(--color-border-subtle);
@@ -230,14 +229,14 @@ onUnmounted(() => {
         transition: all 0.3s;
         backdrop-filter: blur(10px);
         width: 100%;
-        height: 100%; 
-        
+        height: 100%;
+
         &:hover {
             transform: translateY(-5px);
             border-color: var(--color-accent-magenta);
             box-shadow: 0 0 15px rgba(255, 60, 174, 0.3);
         }
-        
+
         &.create {
             background: linear-gradient(to bottom, rgba(255, 255, 255, 0.05), transparent);
         }
@@ -246,7 +245,7 @@ onUnmounted(() => {
 
 .ranking-panel {
     background: rgba(11, 8, 20, 0.8);
-    border: calc(var(--gu) * 0.125) solid #2d2445; 
+    border: calc(var(--gu) * 0.125) solid #2d2445;
     border-radius: var(--radius-lg);
     padding: var(--space-4);
     box-shadow: 0 0 10px #7b2cbf40;
@@ -254,7 +253,7 @@ onUnmounted(() => {
     display: flex;
     flex-direction: column;
     align-items: center;
-    
+
     .tabs {
         display: flex;
         justify-content: center;
@@ -262,7 +261,7 @@ onUnmounted(() => {
         margin-bottom: var(--space-4);
         border-bottom: 2px solid rgba(255, 255, 255, 0.1);
         width: 100%;
-        
+
         button {
             background: transparent;
             border: none;
@@ -273,7 +272,7 @@ onUnmounted(() => {
             cursor: pointer;
             border-bottom: 2px solid transparent;
             margin-bottom: -2px;
-            
+
             &.active {
                 color: var(--color-accent-cyan);
                 border-bottom-color: var(--color-accent-cyan);
@@ -281,7 +280,7 @@ onUnmounted(() => {
             }
         }
     }
-    
+
     h3 {
         font-family: var(--font-display);
         color: var(--color-accent-green);
@@ -290,7 +289,7 @@ onUnmounted(() => {
         text-shadow: 0 0 10px rgba(92, 255, 176, 0.5);
         text-align: center;
     }
-    
+
     ul {
         list-style: none;
         width: 100%;
@@ -305,18 +304,18 @@ onUnmounted(() => {
             border-bottom: calc(var(--gu) * 0.0625) solid rgba(255, 255, 255, 0.05);
             font-family: var(--font-display);
             font-size: var(--fontSize-md);
-            
+
             &:last-child {
                 border-bottom: none;
             }
-            
+
             .rank {
                 font-weight: bold;
                 width: calc(var(--gu) * 1.5);
                 flex-shrink: 0;
                 color: var(--color-accent-cyan);
                 text-align: left;
-                
+
                 &.gold { color: #FFD700; }
                 &.silver { color: #C0C0C0; }
             }

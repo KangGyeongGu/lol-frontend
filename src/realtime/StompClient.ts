@@ -1,5 +1,5 @@
 import { Client, type StompSubscription } from '@stomp/stompjs';
-import { tokenStorage } from '@/utils/token.util';
+import { tokenStorage } from '@/shared/utils/token.util';
 
 /**
  * Singleton StompClient for managing WebSocket connections via STOMP over Native WebSockets.
@@ -49,16 +49,13 @@ class StompClient {
                 connectHeaders: {
                     Authorization: `Bearer ${token}`
                 },
-                debug: (str) => {
-                    if (import.meta.env.DEV) console.debug('[STOMP]', str);
-                },
+                debug: () => {},
                 reconnectDelay: 5000,
                 heartbeatIncoming: 4000,
                 heartbeatOutgoing: 4000,
             });
 
             this.client.onConnect = () => {
-                console.log('[STOMP] Connected');
                 this.connectionPromise = null;
                 resolve();
             };
@@ -90,7 +87,6 @@ class StompClient {
             this.subscriptions.clear();
             this.client.deactivate();
             this.client = null;
-            console.log('[STOMP] Disconnected');
         }
     }
 
@@ -100,7 +96,7 @@ class StompClient {
      * @param callback Function to execute on message received
      * @returns Subscription ID for manual cleanup if needed
      */
-    public async subscribe(topic: string, callback: (payload: any) => void): Promise<string> {
+    public async subscribe(topic: string, callback: (payload: unknown) => void): Promise<string> {
         await this.connect();
 
         if (this.subscriptions.has(topic)) {
@@ -115,8 +111,8 @@ class StompClient {
             try {
                 const payload = JSON.parse(message.body);
                 callback(payload);
-            } catch (e) {
-                console.warn('[STOMP] Failed to parse message body', e);
+            } catch {
+                // 메시지 파싱 실패 시 무시
             }
         });
 
@@ -138,11 +134,8 @@ class StompClient {
     /**
      * Send a message/command to the server.
      */
-    public send(destination: string, body: any): void {
-        if (!this.client?.connected) {
-            console.warn('[STOMP] Cannot send: Not connected');
-            return;
-        }
+    public send(destination: string, body: unknown): void {
+        if (!this.client?.connected) return;
         this.client.publish({
             destination,
             body: JSON.stringify(body)

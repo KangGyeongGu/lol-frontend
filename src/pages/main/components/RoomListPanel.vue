@@ -2,9 +2,10 @@
 import { ref, onMounted, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useRoomStore } from '@/stores/useRoomStore';
+import { MESSAGES } from '@/shared/constants/messages';
 import RoomList from '@/widgets/RoomList.vue';
-import type { GameType, Language, RoomStatus } from '@/api/dtos/room.types';
-import type { RoomFilterParams } from '@/api/room';
+import type { RoomFilterParams } from '@/api/dtos/room.dto';
+import type { GameType, Language, RoomStatus } from '@/entities/room.model';
 
 const emit = defineEmits<{
   (e: 'navigate', view: 'HUB'): void;
@@ -16,20 +17,21 @@ const router = useRouter();
 
 const currentPage = ref(1);
 const roomsPerPage = 10;
+const errorMessage = ref<string | null>(null);
 
 const searchQuery = ref('');
 const searchTarget = ref<'TITLE' | 'HOST'>('TITLE');
 const selectedLanguage = ref<Language | 'ALL'>('ALL');
-const selectedMode = ref<GameType | 'ALL'>('ALL'); 
-const selectedStatus = ref<RoomStatus | 'ALL'>('ALL'); 
+const selectedMode = ref<GameType | 'ALL'>('ALL');
+const selectedStatus = ref<RoomStatus | 'ALL'>('ALL');
 const activeDropdown = ref<'LANG' | 'MODE' | 'STATUS' | 'SEARCH_BY' | null>(null);
 
 const languages: (Language | 'ALL')[] = ['ALL', 'JAVA', 'PYTHON', 'CPP', 'JAVASCRIPT'];
 const modes: (GameType | 'ALL')[] = ['ALL', 'RANKED', 'NORMAL'];
 const statuses: { label: string, value: RoomStatus | 'ALL' }[] = [
-    { label: 'ALL ROOMS', value: 'ALL' },
-    { label: 'AVAILABLE', value: 'WAITING' },
-    { label: 'IN-GAME', value: 'IN_GAME' }
+    { label: MESSAGES.FILTER.ALL_ROOMS, value: 'ALL' },
+    { label: MESSAGES.FILTER.AVAILABLE, value: 'WAITING' },
+    { label: MESSAGES.FILTER.IN_GAME, value: 'IN_GAME' }
 ];
 
 function toggleDropdown(type: 'LANG' | 'MODE' | 'STATUS' | 'SEARCH_BY') {
@@ -47,7 +49,7 @@ function resetFilters() {
 const filteredRooms = computed(() => {
     return roomStore.rooms.filter(room => {
         // 검색어 필터
-        const matchesSearch = searchTarget.value === 'TITLE' 
+        const matchesSearch = searchTarget.value === 'TITLE'
             ? room.roomName.toLowerCase().includes(searchQuery.value.toLowerCase())
             : true;
         if (!matchesSearch) return false;
@@ -91,7 +93,7 @@ async function refreshRooms() {
     const params: RoomFilterParams = {
         limit: 20
     };
-    
+
     if (searchQuery.value) {
         if (searchTarget.value === 'TITLE') {
             params.roomName = searchQuery.value;
@@ -99,15 +101,14 @@ async function refreshRooms() {
             params.hostName = searchQuery.value;
         }
     }
-    
+
     if (selectedLanguage.value !== 'ALL') params.language = selectedLanguage.value as Language;
     if (selectedMode.value !== 'ALL') params.gameType = selectedMode.value as GameType;
     if (selectedStatus.value !== 'ALL') params.roomStatus = selectedStatus.value as RoomStatus;
-    
+
     await roomStore.fetchRooms(params);
 }
 
-// 필터 변경 시 페이지 번호 초기화
 watch([searchQuery, searchTarget, selectedLanguage, selectedMode, selectedStatus], () => {
     currentPage.value = 1;
 });
@@ -118,12 +119,14 @@ onMounted(() => {
 
 async function handleJoinRoom(roomId: string) {
     try {
-        const roomDetail = await roomStore.joinRoom(roomId);
-        console.log('Joined room:', roomDetail);
+        await roomStore.joinRoom(roomId);
         router.push({ name: 'WAITING_ROOM', params: { roomId } });
     } catch (e) {
         console.error('Join failed:', e);
-        alert('방 참가에 실패했습니다.');
+        errorMessage.value = MESSAGES.ROOM.JOIN_FAILED;
+        setTimeout(() => {
+            errorMessage.value = null;
+        }, 3000);
     }
 }
 </script>
@@ -134,28 +137,28 @@ async function handleJoinRoom(roomId: string) {
         <button class="back-btn" @click="emit('navigate', 'HUB')">
             <span class="btn-inner">←</span>
         </button>
-        <h1 class="title">Battle Rooms</h1>
+        <h1 class="title">{{ MESSAGES.PAGE.BATTLE_ROOMS }}</h1>
         <div class="spacer"></div>
     </header>
-    
+
     <div class="filter-bar">
         <div class="action-group">
             <button class="create-btn" @click="emit('create')">
                 <span class="plus-icon">+</span>
-                Create Room
-            </button> 
-            <button class="refresh-btn" title="Refresh Rooms" @click="refreshRooms">
+                {{ MESSAGES.PAGE.CREATE_ROOM }}
+            </button>
+            <button class="refresh-btn" :title="MESSAGES.PAGE.REFRESH_ROOMS" @click="refreshRooms">
                 <span class="refresh-icon" :class="{ rotating: roomStore.isLoading }">↻</span>
             </button>
         </div>
 
         <div class="filter-group">
-            <div class="group-label">FILTERS</div>
-            
+            <div class="group-label">{{ MESSAGES.FILTER.FILTERS }}</div>
+
             <!-- 언어 필터 드롭다운 -->
             <div class="dropdown-wrapper">
                 <button class="filter-pill" :class="{ active: activeDropdown === 'LANG' }" @click="toggleDropdown('LANG')">
-                    Language: {{ selectedLanguage }} <span>▼</span>
+                    {{ MESSAGES.FILTER.LANGUAGE }} {{ selectedLanguage }} <span>▼</span>
                 </button>
                 <Transition name="slide-fade">
                     <div v-if="activeDropdown === 'LANG'" class="dropdown-panel">
@@ -169,7 +172,7 @@ async function handleJoinRoom(roomId: string) {
             <!-- 게임 타입 필터 드롭다운 -->
             <div class="dropdown-wrapper">
                 <button class="filter-pill" :class="{ active: activeDropdown === 'MODE' }" @click="toggleDropdown('MODE')">
-                    Type: {{ selectedMode }} <span>▼</span>
+                    {{ MESSAGES.FILTER.TYPE }} {{ selectedMode }} <span>▼</span>
                 </button>
                 <Transition name="slide-fade">
                     <div v-if="activeDropdown === 'MODE'" class="dropdown-panel">
@@ -183,7 +186,7 @@ async function handleJoinRoom(roomId: string) {
             <!-- 상태 필터 드롭다운 -->
             <div class="dropdown-wrapper">
                 <button class="filter-pill" :class="{ active: activeDropdown === 'STATUS' }" @click="toggleDropdown('STATUS')">
-                    Status: {{ statuses.find(s => s.value === selectedStatus)?.label }} <span>▼</span>
+                    {{ MESSAGES.FILTER.STATUS }} {{ statuses.find(s => s.value === selectedStatus)?.label }} <span>▼</span>
                 </button>
                 <Transition name="slide-fade">
                     <div v-if="activeDropdown === 'STATUS'" class="dropdown-panel">
@@ -199,7 +202,7 @@ async function handleJoinRoom(roomId: string) {
                 <span class="icon">⟲</span>
             </button>
         </div>
-        
+
         <div class="search-group">
             <div class="search-wrapper">
                 <div class="search-target-dropdown dropdown-wrapper">
@@ -208,15 +211,15 @@ async function handleJoinRoom(roomId: string) {
                     </button>
                     <Transition name="slide-fade">
                         <div v-if="activeDropdown === 'SEARCH_BY'" class="dropdown-panel small">
-                            <button class="dropdown-item" :class="{ selected: searchTarget === 'TITLE' }" @click="searchTarget = 'TITLE'; activeDropdown = null">TITLE</button>
-                            <button class="dropdown-item" :class="{ selected: searchTarget === 'HOST' }" @click="searchTarget = 'HOST'; activeDropdown = null">HOST</button>
+                            <button class="dropdown-item" :class="{ selected: searchTarget === 'TITLE' }" @click="searchTarget = 'TITLE'; activeDropdown = null">{{ MESSAGES.FILTER.TITLE }}</button>
+                            <button class="dropdown-item" :class="{ selected: searchTarget === 'HOST' }" @click="searchTarget = 'HOST'; activeDropdown = null">{{ MESSAGES.FILTER.HOST }}</button>
                         </div>
                     </Transition>
                 </div>
-                <input 
+                <input
                     v-model="searchQuery"
-                    type="text" 
-                    :placeholder="searchTarget === 'TITLE' ? 'Search by room title...' : 'Search by host name...'" 
+                    type="text"
+                    :placeholder="searchTarget === 'TITLE' ? 'Search by room title...' : 'Search by host name...'"
                 />
             </div>
         </div>
@@ -231,15 +234,16 @@ async function handleJoinRoom(roomId: string) {
             <button class="page-nav next" :disabled="currentPage === totalPages || totalPages === 0" @click="setPage(currentPage + 1)">NEXT</button>
         </div>
         <div class="room-count">
-            Page <span class="highlight">{{ totalPages === 0 ? 0 : currentPage }}</span> of {{ totalPages }} 
+            Page <span class="highlight">{{ totalPages === 0 ? 0 : currentPage }}</span> of {{ totalPages }}
             <span class="divider">|</span>
             Found <span class="highlight">{{ filteredRooms.length }}</span> Matches
         </div>
     </div>
-    
+
     <main class="room-grid-area">
+        <p v-if="errorMessage" class="error-message-fixed">{{ errorMessage }}</p>
         <div v-if="filteredRooms.length === 0 && !roomStore.isLoading" class="no-results">
-            검색 결과와 일치하는 방이 없습니다.
+            {{ MESSAGES.EMPTY_STATE.NO_RESULTS }}
         </div>
         <RoomList v-else :rooms="paginatedRooms" :loading="roomStore.isLoading" @join="handleJoinRoom" />
     </main>
@@ -258,7 +262,7 @@ async function handleJoinRoom(roomId: string) {
     align-items: center;
     gap: var(--space-4);
     margin-bottom: var(--space-2);
-    
+
     .back-btn {
         background: rgba(58, 242, 255, 0.05);
         border: 1px solid rgba(58, 242, 255, 0.3);
@@ -269,7 +273,7 @@ async function handleJoinRoom(roomId: string) {
         cursor: pointer;
         display: flex; align-items: center; justify-content: center;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        
+
         &:hover {
             background: rgba(58, 242, 255, 0.15);
             border-color: var(--color-accent-cyan);
@@ -278,7 +282,7 @@ async function handleJoinRoom(roomId: string) {
         }
         .btn-inner { margin-top: -2px; }
     }
-    
+
     .title {
         font-family: var(--font-display);
         font-size: calc(var(--gu) * 3);
@@ -303,7 +307,7 @@ async function handleJoinRoom(roomId: string) {
     margin-bottom: var(--space-4);
     box-shadow: 0 calc(var(--gu) * 0.5) calc(var(--gu) * 2) rgba(0, 0, 0, 0.4), inset 0 calc(var(--gu) * 0.0625) calc(var(--gu) * 0.0625) rgba(255, 255, 255, 0.05);
     z-index: 100;
-    
+
     .action-group {
         display: flex;
         align-items: center;
@@ -324,7 +328,7 @@ async function handleJoinRoom(roomId: string) {
             display: flex;
             align-items: center;
             gap: 10px;
-            
+
             .plus-icon { font-size: calc(var(--gu) * 1.2); margin-top: calc(var(--gu) * -0.125); }
             &:hover {
                transform: translateY(-2px);
@@ -364,7 +368,7 @@ async function handleJoinRoom(roomId: string) {
         background: rgba(0, 0, 0, 0.2);
         padding: calc(var(--gu) * 0.375) calc(var(--gu) * 0.875);
         border-radius: calc(var(--gu) * 0.875);
-        
+
         .group-label {
             font-size: calc(var(--gu) * 0.65);
             font-weight: 800;
@@ -400,7 +404,7 @@ async function handleJoinRoom(roomId: string) {
             }
 
             &:active {
-                .icon { 
+                .icon {
                     transform: rotate(-360deg);
                     transition: transform 0.2s;
                 }
@@ -484,7 +488,7 @@ async function handleJoinRoom(roomId: string) {
         align-items: center;
         padding-left: 4px;
         transition: 0.3s;
-        
+
         &:focus-within {
             border-color: var(--color-accent-cyan);
             box-shadow: 0 0 15px rgba(58, 242, 255, 0.15);
@@ -514,7 +518,7 @@ async function handleJoinRoom(roomId: string) {
             width: calc(var(--gu) * 11.25);
             font-family: var(--font-ui);
             font-size: calc(var(--gu) * 0.85);
-            
+
             &::placeholder { color: rgba(255, 255, 255, 0.3); }
             &:focus { outline: none; width: calc(var(--gu) * 13.75); }
         }
@@ -570,6 +574,25 @@ async function handleJoinRoom(roomId: string) {
 
 .room-grid-area {
     flex: 1; overflow: hidden; display: flex; flex-direction: column;
+    position: relative;
+
+    .error-message-fixed {
+        position: absolute;
+        top: calc(var(--gu) * 1);
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 100;
+        color: var(--color-accent-red);
+        font-size: calc(var(--gu) * 0.9);
+        text-align: center;
+        padding: calc(var(--gu) * 0.75) calc(var(--gu) * 1.5);
+        background: rgba(255, 77, 109, 0.15);
+        border: calc(var(--gu) * 0.0625) solid var(--color-accent-red);
+        border-radius: var(--radius-md);
+        animation: shake 0.3s ease-in-out;
+        box-shadow: 0 calc(var(--gu) * 0.5) calc(var(--gu) * 2) rgba(0, 0, 0, 0.5);
+    }
+
     .no-results {
         flex: 1; display: flex; align-items: center; justify-content: center;
         color: var(--color-text-muted); font-size: calc(var(--gu) * 1.1);
@@ -582,4 +605,10 @@ async function handleJoinRoom(roomId: string) {
 .slide-fade-enter-from, .slide-fade-leave-to { transform: translateY(-10px); opacity: 0; }
 
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+@keyframes shake {
+    0%, 100% { transform: translateX(-50%); }
+    25% { transform: translateX(calc(-50% - 5px)); }
+    75% { transform: translateX(calc(-50% + 5px)); }
+}
 </style>

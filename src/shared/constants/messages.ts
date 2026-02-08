@@ -86,4 +86,22 @@ export const MESSAGES = {
     TIME_LIMIT_LABEL: '제한 시간:',
     LANGUAGE_SETTING_LABEL: '언어:',
   },
+
+  // 매치 관련 메시지 (밴/픽/상점)
+  MATCH: {
+    PHASE_BAN: '알고리즘 밴',
+    PHASE_PICK: '알고리즘 픽',
+    PHASE_SHOP: '아이템 / 스펠 구매',
+    BAN_INSTRUCTION: '밴할 알고리즘을 선택하세요',
+    PICK_INSTRUCTION: '픽할 알고리즘을 선택하세요',
+    SHOP_INSTRUCTION: '아이템과 스펠을 구매하세요',
+    SELECT: '선택',
+    PURCHASE: '구매하기',
+    ITEMS_LABEL: '아이템',
+    SPELLS_LABEL: '스펠',
+    SELECTED_ITEMS: '선택된 아이템',
+    SELECTED_SPELLS: '선택된 스펠',
+    TOTAL_COST: '총 비용:',
+    WAITING_FOR_PLAYER: 'WAITING FOR PLAYER...',
+  },
 } as const;

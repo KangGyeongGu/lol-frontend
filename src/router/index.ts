@@ -37,8 +37,23 @@ const routes: RouteRecordRaw[] = [
         name: 'WAITING_ROOM',
         component: WaitingRoomPage,
         meta: { authRequired: true }
-    }
+    },
+    {
+        path: '/match/:roomId/:gameId',
+        name: 'BAN_PICK_SHOP',
+        component: () => import('@/pages/match/BanPickShopPage.vue'),
+        meta: { authRequired: true }
+    },
 ];
+
+if (import.meta.env.DEV) {
+    routes.push({
+        path: '/dev/ban-pick-shop/:roomId?/:gameId?',
+        name: 'DEV_BAN_PICK_SHOP',
+        component: () => import('@/pages/match/BanPickShopPage.vue'),
+        meta: { public: true }
+    });
+}
 
 const router = createRouter({
     history: createWebHistory(),

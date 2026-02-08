@@ -1,3 +1,5 @@
+import type { UserSummary } from './auth.dto';
+
 export type GameType = 'NORMAL' | 'RANKED';
 export type Language = 'JAVA' | 'PYTHON' | 'CPP' | 'JAVASCRIPT';
 export type PlayerState = 'READY' | 'UNREADY' | 'DISCONNECTED';
@@ -11,12 +13,8 @@ export interface PageCursor {
     nextCursor: string | null;
 }
 
-export interface UserSummary {
-    userId: string;
-    nickname: string;
-    tier: string;
-    score: number;
-}
+// Re-export UserSummary from auth.dto to avoid duplication
+export type { UserSummary };
 
 export interface RoomSummary {
     roomId: string;
@@ -56,4 +54,14 @@ export interface RoomDetail {
     language: Language;
     maxPlayers: number;
     players: RoomPlayer[];
+}
+
+export interface RoomFilterParams {
+    roomName?: string;
+    hostName?: string;
+    language?: Language;
+    gameType?: GameType;
+    roomStatus?: RoomStatus;
+    cursor?: string;
+    limit?: number;
 }

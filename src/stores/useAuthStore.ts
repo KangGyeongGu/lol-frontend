@@ -46,6 +46,16 @@ export const useAuthStore = defineStore('auth', () => {
         user.value = response.user;
     }
 
+    async function fetchUserProfile() {
+        if (!accessToken.value) return;
+        try {
+            const profile = await authApi.getMe();
+            user.value = profile;
+        } catch (error) {
+            console.error('[AuthStore] Fetch profile error:', error);
+        }
+    }
+
     async function logout() {
         try {
             await authApi.logout();
@@ -62,6 +72,7 @@ export const useAuthStore = defineStore('auth', () => {
         login,
         mockLogin,
         signup,
+        fetchUserProfile,
         logout
     };
 });

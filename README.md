@@ -1,102 +1,113 @@
 # League of Algo Logic (Frontend)
 
-실시간 알고리즘 대전 플랫폼, **League of Algo Logic**의 프론트엔드 프로젝트입니다.  
-고급스러운 사이버펑크(Cyberpunk) 테마를 바탕으로, 복잡한 게임 상태를 실시간으로 시각화하고 최적의 UX를 제공하는 것을 목표로 합니다.
+실시간 알고리즘 대전 플랫폼 **League of Algo Logic**의 프론트엔드.
 
----
+## Tech Stack
 
-## 🛠 Tech Stack
+| Category | Stack |
+|---|---|
+| Core | Vue 3 (Composition API), TypeScript 5.9 |
+| Build | Vite 7.2 |
+| State | Pinia 3 |
+| Realtime | STOMP over WebSocket (`@stomp/stompjs`) |
+| HTTP | Axios |
+| Style | SCSS (Design Tokens, CSS Variables) |
 
-- **Core**: Vue 3 (Composition API), TypeScript
-- **Build Tool**: Vite
-- **State Management**: Pinia
-- **Styling**: Vanilla SCSS (Design Tokens 기반)
-- **Networking**: Axios (Interceptor를 통한 공통 처리)
-- **Design Pattern**: 
-  - **Thin Core Layer**: 가벼운 핵심 인프라 구축 후 기능을 수직적으로 구현
-  - **Feature-First**: 도메인/기능 중심의 구조 설계
-  - **SSOT (Single Source of Truth)**: OpenAPI Specification에 따른 타입 및 통신 규격 일치
+## Directory Structure
 
----
-
-## 📂 Directory Structure
-
-```text
+```
 src/
-├── api/             # API 통신 레이어
-│   ├── core/        # Axios 인스턴스 및 인터셉터 설정
-│   ├── dtos/        # OpenAPI 규격 기반 TypeScript 인터페이스
-│   └── mock/        # 백엔드 미구동 시 사용되는 Mocking 시스템
-├── assets/          # 정적 자원 (이미지, 디자인 토큰 등)
-├── pages/           # 페이지 수준 컴포넌트
-│   ├── auth/        # 로그인, 회원가입 관련
-│   ├── main/        # 대시보드(허브), 대기실 목록
-│   └── user/        # 마이페이지 관련
-├── stores/          # Pinia 상태 관리 (Domain-driven)
-├── widgets/         # 재사용 가능한 UI 모듈
-├── styles/          # 전역 스타일 및 테마 정의
-├── router/          # Vue Router 설정 및 네비게이션 가드
-└── utils/           # 유틸리티 함수 (토큰 관리 등)
+├── api/                  # REST 클라이언트 및 DTO
+│   ├── core/             #   Axios 인스턴스, 인터셉터
+│   └── dtos/             #   요청/응답 인터페이스
+├── entities/             # DTO → ViewModel 변환
+├── stores/               # Pinia 스토어
+├── realtime/             # STOMP 클라이언트, EventDispatcher
+├── shared/               # 공용 모듈
+│   ├── composables/      #   useServerClock 등
+│   ├── constants/        #   UI 메시지 상수
+│   ├── types/            #   공용 타입
+│   ├── ui/               #   BaseBadge, BaseButton
+│   └── utils/            #   토큰 유틸리티
+├── features/             # 도메인 기능 단위 (chat 등)
+├── pages/                # 라우트 단위 페이지
+│   ├── auth/             #   LoginPage, SignupPage
+│   ├── main/             #   MainPage (방 목록, 허브)
+│   ├── room/             #   WaitingRoomPage (대기실)
+│   ├── match/            #   BanPickShopPage (밴/픽/상점)
+│   └── user/             #   MyPage
+├── widgets/              # 페이지 횡단 위젯 (모달, 목록)
+├── router/               # Vue Router 설정, 가드
+├── styles/               # 전역 스타일, 디자인 토큰
+└── assets/               # 이미지, 정적 자원
 ```
 
----
+## Pages
 
-## ✨ Core Features
+| Route | Page | Description |
+|---|---|---|
+| `/` | LoginPage | 카카오 OAuth2 로그인 |
+| `/signup` | SignupPage | 닉네임 설정 후 회원가입 |
+| `/main` | MainPage | 방 목록 조회/필터, 방 생성, 글로벌 채팅 |
+| `/mypage` | MyPage | 전적/통계 조회 |
+| `/room/:roomId` | WaitingRoomPage | 대기실 (준비/시작, 로비 채팅) |
+| `/match/:roomId/:gameId` | BanPickShopPage | 밴 → 픽 → 상점 단계 진행 |
 
-### 1. 인증 시스템 (Authentication)
-- 카카오 OAuth2 기반 소셜 로그인 기능
-- JWT(Access/Refresh Token) 기반의 보안 세션 관리
-- 비로그인 사용자의 접근을 제어하는 라우터 가드
+## Features
 
-### 2. 배틀룸 관리 (Room Management)
-- 실시간 방 목록 조회 및 필터링 (언어별, 게임 타입별)
-- 정교한 UI의 배틀룸 생성 모달 및 참여 로직 구현
-- 대기실 상태 동기화 인프라 구축
+### Authentication
+- 카카오 OAuth2 소셜 로그인
+- JWT Access/Refresh Token (localStorage)
+- 라우터 가드로 비인증 접근 차단
 
-### 3. API Mocking 시스템
-- 백엔드 서버 없이도 프론트엔드 기능을 독립적으로 개발/테스트할 수 있는 모킹 아키텍처
-- `VITE_API_MOCK` 환경 변수를 통한 간편한 활성화/비활성화 제어
-- 실제 네트워크 지연 시간을 시뮬레이션하여 현실적인 UX 테스트 가능
+### Room
+- 방 목록 실시간 조회 및 필터링 (언어, 게임 타입, 상태)
+- 방 생성/참가/퇴장/강퇴
+- 대기실 로비 STOMP 구독 (`/topic/rooms/{roomId}/lobby`)
 
-### 4. 사이버펑크 디자인 시스템
-- 네온 액센트, 글래스모피즘(Glassmorphism), 다이나믹한 애니메이션 적용
-- 디자인 토큰(`tokens.scss`)을 통한 일관된 색상 및 스타일 관리
+### Match (Ban/Pick/Shop)
+- BAN → PICK → SHOP 3단계 phase navigator
+- 서버 시간 동기화 기반 타이머 (`useServerClock`)
+- 알고리즘 카탈로그에서 밴/픽 선택
+- 아이템/스펠 장바구니 구매
 
----
+### Realtime
+- STOMP WebSocket 싱글턴 (`StompClient`)
+- `EventDispatcher`가 토픽별 메시지를 Pinia 스토어로 라우팅
+- 유저 큐 구독: 에러, 시간 동기화, 인벤토리
+- `ROOM_GAME_STARTED` 이벤트로 대기실 → 매치 페이지 전환
 
-## 🚀 Getting Started
+### Design Tokens
+- `tokens.scss`에서 색상, 폰트, 간격, 반경 등 정의
+- `--gu` (Global Unit) 기반 반응형 스케일링
+- 16:9 비율 컨테이너 레이아웃
 
-### Installation
+## Getting Started
+
 ```bash
+# 의존성 설치
 npm install
-```
 
-### Development
-```bash
-# 로컬 개발 서버 실행
+# 개발 서버 (localhost:3000)
 npm run dev
-```
 
-### Build
-```bash
-# 배포용 번들 생성
+# 프로덕션 빌드
 npm run build
 ```
 
----
+## Environment Variables
 
-## ⚙️ Environment Variables
+| Variable | Description |
+|---|---|
+| `VITE_API_BASE_URL` | API 베이스 경로 (기본: `/api/v1`) |
+| `VITE_KAKAO_CLIENT_ID` | 카카오 REST API 키 |
+| `VITE_REDIRECT_URI` | 카카오 로그인 리다이렉트 URI |
 
-`.env` 파일을 생성하여 아래 환경 변수들을 설정하십시오.
+## Proxy
 
-| 변수명 | 설명 | 비고 |
-|:--- |:--- |:--- |
-| `VITE_API_BASE_URL` | API 서버 기본 주소 | 기본값: `/api/v1` |
-| `VITE_API_MOCK` | API 모킹 여부 | `true` 시 모킹 활성 |
-| `VITE_KAKAO_CLIENT_ID` | 카카오 REST API 키 | - |
-| `VITE_REDIRECT_URI` | 카카오 로그인 리다이렉트 URI | - |
+개발 서버에서 아래 경로를 백엔드(`localhost:8080`)로 프록시합니다.
 
----
-
-## ⚖️ Design Strategy
-본 프로젝트는 **SSOT** 원칙을 최우선으로 합니다. 모든 데이터 모델과 통신 규격은 `OPENAPI.yaml.md`에서 정의된 내용을 엄격히 따르며, 모든 UI 컴포넌트는 사용자의 몰입감을 극대화할 수 있는 **Premium Cyberpunk Aesthetics**를 지향합니다.
+| Path | Target | Note |
+|---|---|---|
+| `/api` | `http://localhost:8080` | REST API |
+| `/ws` | `http://localhost:8080` | WebSocket |

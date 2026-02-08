@@ -2,15 +2,18 @@ import type {
     RoomSummary,
     RoomDetail,
     RoomPlayer,
+    ActiveGame,
     GameType,
+    GameStage,
     Language,
+    PageRoute,
     RoomStatus,
     PlayerState
 } from '@/api/dtos/room.dto';
 import { toUserViewModel, type UserViewModel } from './auth.model';
 
 // Re-export types
-export type { GameType, Language, RoomStatus, PlayerState };
+export type { GameType, GameStage, Language, PageRoute, RoomStatus, PlayerState };
 
 // ViewModel 타입 정의
 export interface RoomSummaryViewModel {
@@ -38,6 +41,8 @@ export interface RoomDetailViewModel {
     language: Language;
     maxPlayers: number;
     players: RoomPlayerViewModel[];
+    stage: GameStage;
+    pageRoute: PageRoute;
 }
 
 // DTO → ViewModel 변환 함수
@@ -60,6 +65,21 @@ export function toRoomDetailViewModel(dto: RoomDetail): RoomDetailViewModel {
         gameType: dto.gameType,
         language: dto.language,
         maxPlayers: dto.maxPlayers,
-        players: dto.players.map(toRoomPlayerViewModel)
+        players: dto.players.map(toRoomPlayerViewModel),
+        stage: dto.stage,
+        pageRoute: dto.pageRoute
     };
+}
+
+export interface ActiveGameViewModel {
+    gameId: string;
+    roomId: string;
+    stage: GameStage;
+    pageRoute: PageRoute;
+    gameType: GameType;
+    remainingMs: number | null;
+}
+
+export function toActiveGameViewModel(dto: ActiveGame): ActiveGameViewModel {
+    return { ...dto };
 }

@@ -5,8 +5,10 @@ import type { CreateRoomRequest, RoomFilterParams } from '@/api/dtos/room.dto';
 import {
     toRoomSummaryViewModel,
     toRoomDetailViewModel,
+    toActiveGameViewModel,
     type RoomSummaryViewModel,
-    type RoomDetailViewModel
+    type RoomDetailViewModel,
+    type ActiveGameViewModel
 } from '@/entities/room.model';
 
 export const useRoomStore = defineStore('room', () => {
@@ -29,20 +31,20 @@ export const useRoomStore = defineStore('room', () => {
         }
     }
 
-    async function createRoom(req: CreateRoomRequest) {
+    async function createRoom(req: CreateRoomRequest): Promise<RoomDetailViewModel> {
         try {
-            const roomDetail = await roomApi.createRoom(req);
-            return roomDetail;
+            const dto = await roomApi.createRoom(req);
+            return toRoomDetailViewModel(dto);
         } catch (error) {
             console.error('[RoomStore] Create error:', error);
             throw error;
         }
     }
 
-    async function joinRoom(roomId: string) {
+    async function joinRoom(roomId: string): Promise<RoomDetailViewModel> {
         try {
-            const roomDetail = await roomApi.joinRoom(roomId);
-            return roomDetail;
+            const dto = await roomApi.joinRoom(roomId);
+            return toRoomDetailViewModel(dto);
         } catch (error) {
             console.error('[RoomStore] Join error:', error);
             throw error;
@@ -88,9 +90,10 @@ export const useRoomStore = defineStore('room', () => {
         }
     }
 
-    async function startGame(roomId: string) {
+    async function startGame(roomId: string): Promise<ActiveGameViewModel> {
         try {
-            await roomApi.startGame(roomId);
+            const dto = await roomApi.startGame(roomId);
+            return toActiveGameViewModel(dto);
         } catch (error) {
             console.error('[RoomStore] StartGame error:', error);
             throw error;
@@ -121,10 +124,6 @@ export const useRoomStore = defineStore('room', () => {
         rooms.value = rooms.value.filter(r => r.roomId !== roomId);
     }
 
-    function handleLobbyEvent(_type: string, _data: unknown) {
-        // 실제 인게임 진입 등 중요한 상태 변화는 페이지에서 처리
-    }
-
     return {
         rooms,
         isLoading,
@@ -140,7 +139,6 @@ export const useRoomStore = defineStore('room', () => {
         startGame,
         kickPlayer,
         handleRoomUpsert,
-        handleRoomRemoved,
-        handleLobbyEvent
+        handleRoomRemoved
     };
 });

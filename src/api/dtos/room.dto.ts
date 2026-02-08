@@ -54,6 +54,34 @@ export interface RoomDetail {
     language: Language;
     maxPlayers: number;
     players: RoomPlayer[];
+    stage: GameStage;
+    pageRoute: PageRoute;
+}
+
+export interface ActiveGame {
+    gameId: string;
+    roomId: string;
+    stage: GameStage;
+    pageRoute: PageRoute;
+    gameType: GameType;
+    remainingMs: number | null;
+}
+
+export interface RoomGameStartedEvent {
+    roomId: string;
+    gameId: string;
+    gameType: GameType;
+    stage: GameStage;
+    pageRoute: PageRoute;
+    stageStartedAt: string;
+    stageDeadlineAt: string;
+    remainingMs: number;
+}
+
+export interface RoomEventData {
+    pageRoute?: PageRoute;
+    stage?: GameStage;
+    [key: string]: unknown;
 }
 
 export interface RoomFilterParams {

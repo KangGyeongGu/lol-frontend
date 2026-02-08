@@ -5,12 +5,13 @@ import { useAuthStore } from '@/stores/useAuthStore';
 import { useRoomStore } from '@/stores/useRoomStore';
 import { MESSAGES } from '@/shared/constants/messages';
 import type { RoomDetailViewModel } from '@/entities/room.model';
+import type { RoomEventData, RoomGameStartedEvent } from '@/api/dtos/room.dto';
 import { useRoomSubscription } from './composables/useRoomSubscription';
 import BaseBadge from '@/shared/ui/BaseBadge.vue';
 import BaseButton from '@/shared/ui/BaseButton.vue';
 import ChatPanel from '@/features/chat/ui/ChatPanel.vue';
-import PlayerSlot from '@/features/room/ui/PlayerSlot.vue';
-import RoomSettingsPanel from '@/features/room/ui/RoomSettingsPanel.vue';
+import PlayerSlot from './components/PlayerSlot.vue';
+import RoomSettingsPanel from './components/RoomSettingsPanel.vue';
 import bgMainSrc from '@/assets/images/bg-main.jpg';
 
 const route = useRoute();
@@ -63,12 +64,19 @@ async function fetchRoomDetail() {
 }
 
 // STOMP 이벤트 수신 시: 직전 사용자 액션 직후면 스킵, 아니면 조용히 갱신
-async function onLobbyEvent() {
+async function onLobbyEvent(type?: string, data?: RoomEventData) {
+    // 게임 시작 이벤트 → 전원(방장 포함) 페이지 전환
+    if (type === 'ROOM_GAME_STARTED') {
+        const event = data as unknown as RoomGameStartedEvent;
+        router.push({ name: event.pageRoute, params: { roomId, gameId: event.gameId } });
+        return;
+    }
+
     if (Date.now() - lastActionTime < 1000) return;
     try {
         const updated = await roomStore.getRoomDetail(roomId);
         if (room.value) {
-            room.value.players = updated.players;
+            room.value = { ...room.value, players: updated.players };
         }
     } catch { /* 다른 유저 이벤트 갱신 실패는 무시 */ }
 }
@@ -90,7 +98,7 @@ async function toggleReady() {
             ? await roomStore.unready(roomId)
             : await roomStore.ready(roomId);
         if (room.value) {
-            room.value.players = updated.players;
+            room.value = { ...room.value, players: updated.players };
         }
         lastActionTime = Date.now();
     } catch (error) {
@@ -101,6 +109,7 @@ async function toggleReady() {
 async function handleStart() {
     try {
         await roomStore.startGame(roomId);
+        // 전환은 ROOM_GAME_STARTED 이벤트로 전원 일괄 처리
     } catch (error) {
         console.error('Start failed:', error);
     }

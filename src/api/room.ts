@@ -60,7 +60,7 @@ export const roomApi = {
      * 게임 시작 (방장 전용)
      */
     startGame: (roomId: string) => {
-        return apiClient.post<void, void>(`/rooms/${roomId}/start`);
+        return apiClient.post<void, import('@/api/dtos/room.dto').ActiveGame>(`/rooms/${roomId}/start`);
     },
 
     /**

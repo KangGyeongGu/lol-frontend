@@ -139,6 +139,29 @@ registerMock('POST', '/rooms/{roomId}/join', (config: AxiosRequestConfig) => {
     return mockHandler || { roomId, roomName: 'Joined Room', gameType: 'NORMAL', language: 'PYTHON', maxPlayers: 6, players: [] };
 });
 
+registerMock('POST', '/rooms/{roomId}/ready', (config: AxiosRequestConfig) => {
+    const roomId = config.url?.split('/').filter(Boolean).slice(-2, -1)[0] || 'room-001';
+    const getRegistry = mockRegistry.GET || {};
+    const detail = (typeof getRegistry[`/rooms/${roomId}`] === 'function' ? getRegistry[`/rooms/${roomId}`](config) : getRegistry[`/rooms/${roomId}`]) as RoomDetail;
+
+    // 심플하게 내 상태만 READY로 변경한 버전을 반환
+    const updatedPlayers = detail.players.map(p =>
+        p.user.userId === 'host-user-01' ? { ...p, state: 'READY' } : p
+    );
+    return { ...detail, players: updatedPlayers };
+});
+
+registerMock('POST', '/rooms/{roomId}/unready', (config: AxiosRequestConfig) => {
+    const roomId = config.url?.split('/').filter(Boolean).slice(-2, -1)[0] || 'room-001';
+    const getRegistry = mockRegistry.GET || {};
+    const detail = (typeof getRegistry[`/rooms/${roomId}`] === 'function' ? getRegistry[`/rooms/${roomId}`](config) : getRegistry[`/rooms/${roomId}`]) as RoomDetail;
+
+    const updatedPlayers = detail.players.map(p =>
+        p.user.userId === 'host-user-01' ? { ...p, state: 'UNREADY' } : p
+    );
+    return { ...detail, players: updatedPlayers };
+});
+
 registerMock('POST', '/rooms/{roomId}/leave', () => {
     return { success: true };
 });

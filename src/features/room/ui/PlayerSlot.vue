@@ -42,7 +42,7 @@ defineProps<Props>();
 
 <style scoped lang="scss">
 .player-slot {
-  border-radius: var(--gu);
+  border-radius: 1vw;
   position: relative;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   background: rgba(0, 0, 0, 0.2);
@@ -50,16 +50,16 @@ defineProps<Props>();
   
   &.occupied {
     background: rgba(23, 19, 42, 0.95);
-    border: calc(var(--gu) * 0.125) solid rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.2);
     
     &.ready {
       background: linear-gradient(135deg, rgba(23, 19, 42, 0.95) 0%, rgba(255, 210, 72, 0.15) 100%);
       border-color: var(--color-accent-yellow);
-      box-shadow: 0 0 calc(var(--gu) * 1.25) rgba(255, 210, 72, 0.15);
+      box-shadow: 0 0 20px rgba(255, 210, 72, 0.15);
     }
     
     .slot-content {
-      padding: calc(var(--gu) * 1.5);
+      padding: 1.5vw;
       height: 100%;
       display: flex;
       flex-direction: column;
@@ -69,19 +69,19 @@ defineProps<Props>();
     .player-header {
       display: flex;
       align-items: center;
-      gap: calc(var(--gu) * 0.8);
+      gap: 0.8vw;
 
       .avatar-icon {
-        width: calc(var(--gu) * 2.8); height: calc(var(--gu) * 2.8);
+        width: 2.8vw; height: 2.8vw;
         background: rgba(255, 210, 72, 0.1) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="%23FFD248" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>') no-repeat center;
         background-size: 60%;
         border: 1px solid var(--color-accent-yellow);
-        border-radius: calc(var(--gu) * 0.5);
+        border-radius: 0.5vw;
       }
 
       .nickname {
         font-family: var(--font-display);
-        font-size: calc(var(--gu) * 1.1);
+        font-size: clamp(0.9rem, 1.2vw, 1.2rem);
         color: var(--color-accent-yellow);
         font-weight: 800;
       }
@@ -90,7 +90,7 @@ defineProps<Props>();
     .tier-info {
       .tier-name {
         font-family: var(--font-display);
-        font-size: calc(var(--gu) * 1.4);
+        font-size: clamp(1.1rem, 1.6vw, 1.5rem);
         font-weight: 900;
         display: block;
         color: white;
@@ -99,33 +99,33 @@ defineProps<Props>();
         display: inline-block;
         margin-top: 0.5vh;
         background: rgba(255, 255, 255, 0.08);
-        padding: calc(var(--gu) * 0.1) calc(var(--gu) * 0.8);
-        border-radius: calc(var(--gu) * 0.4);
+        padding: 0.2vh 0.8vw;
+        border-radius: 0.4vw;
         font-family: var(--font-mono);
         color: var(--color-accent-yellow);
-        font-size: calc(var(--gu) * 0.75);
+        font-size: clamp(0.65rem, 0.8vw, 0.9rem);
       }
     }
 
     .host-badge-pos {
       position: absolute;
-      top: calc(var(--gu) * 0.56); right: var(--gu);
-      font-size: calc(var(--gu) * 0.6) !important;
-      padding: calc(var(--gu) * 0.125) calc(var(--gu) * 0.375) !important;
+      top: 1vh; right: 1vw;
+      font-size: 0.6vw !important;
+      padding: 2px 6px !important;
     }
 
     .ready-badge-pos {
       position: absolute;
-      bottom: calc(var(--gu) * 0.84); right: var(--gu);
+      bottom: 1.5vh; right: 1vw;
       background: var(--color-accent-yellow) !important;
       color: black !important;
       border: none !important;
-      box-shadow: 0 0 calc(var(--gu) * 0.9) rgba(255, 210, 72, 0.4);
+      box-shadow: 0 0 15px rgba(255, 210, 72, 0.4);
     }
   }
 
   &.empty {
-    border: calc(var(--gu) * 0.125) dashed rgba(58, 242, 255, 0.15);
+    border: 2px dashed rgba(58, 242, 255, 0.15);
     display: flex;
     align-items: center;
     justify-content: center;

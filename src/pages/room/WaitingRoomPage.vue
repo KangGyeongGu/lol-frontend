@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { roomApi } from '@/api/room';
+import { EventDispatcher } from '@/api/realtime/EventDispatcher';
 import type { RoomDetail } from '@/api/dtos/room.types';
 import BaseBadge from '@/shared/ui/BaseBadge.vue';
 import BaseButton from '@/shared/ui/BaseButton.vue';
@@ -59,24 +60,54 @@ async function fetchRoomDetail() {
 async function handleLeave() {
     try {
         await roomApi.leaveRoom(roomId);
-        router.push({ name: 'MAIN' });
+        router.replace({ name: 'MAIN' });
     } catch (error) {
         console.error('Leave failed:', error);
-        router.push({ name: 'MAIN' });
+        router.replace({ name: 'MAIN' });
     }
 }
 
 async function toggleReady() {
-    console.log('Toggle Ready');
-    // Phase 3에서 WebSocket/API 연동 예정
+    if (!myPlayer.value) return;
+    try {
+        if (myPlayer.value.state === 'READY') {
+            room.value = await roomApi.unready(roomId);
+        } else {
+            room.value = await roomApi.ready(roomId);
+        }
+        // 소켓 이벤트에서도 fetchRoomDetail()이 트리거되겠지만, 
+        // 응답으로 받은 데이터를 바로 넣어서 즉각적인 반응성을 확보합니다.
+    } catch (error) {
+        console.error('Toggle ready failed:', error);
+    }
 }
 
-function handleStart() {
-    console.log('Game Start');
+async function handleStart() {
+    try {
+        await roomApi.startGame(roomId);
+    } catch (error) {
+        console.error('Start failed:', error);
+    }
 }
 
-onMounted(() => {
-    fetchRoomDetail();
+async function handleKick(targetUserId: string) {
+    if (!isHost.value) return;
+    try {
+        await roomApi.kickPlayer(roomId, targetUserId);
+    } catch (error) {
+        console.error('Kick failed:', error);
+    }
+}
+
+onMounted(async () => {
+    await fetchRoomDetail();
+    EventDispatcher.subscribeToRoom(roomId, () => {
+        fetchRoomDetail();
+    });
+});
+
+onUnmounted(() => {
+    EventDispatcher.unsubscribeFromRoom(roomId);
 });
 </script>
 
@@ -113,6 +144,8 @@ onMounted(() => {
                         v-for="(player, idx) in displaySlots" 
                         :key="idx" 
                         :player="player"
+                        :is-host-view="isHost"
+                        @kick="handleKick"
                     />
                 </div>
             </section>

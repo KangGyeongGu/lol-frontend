@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { MESSAGES } from '@/shared/constants/messages';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useRouter } from 'vue-router';
 
@@ -9,8 +10,8 @@ const router = useRouter();
 
 <template>
   <div class="mypage-container">
-    <button class="back" @click="router.back()">← 뒤로가기</button>
-    <h1>마이페이지</h1>
+    <button class="back" @click="router.back()">← {{ MESSAGES.COMMON.BACK }}</button>
+    <h1>{{ MESSAGES.COMMON.MYPAGE }}</h1>
     <div class="profile" v-if="authStore.user">
         <p>닉네임: {{ authStore.user.nickname }}</p>
         <p>티어: {{ authStore.user.tier }}</p>

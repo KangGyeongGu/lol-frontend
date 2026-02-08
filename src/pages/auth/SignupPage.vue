@@ -2,7 +2,8 @@
 import { ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/useAuthStore';
-import type { SignupRequest } from '@/api/dtos/auth.types';
+import { MESSAGES } from '@/shared/constants/messages';
+import type { SignupRequest } from '@/api/dtos/auth.dto';
 import logoSrc from '@/assets/images/logo.svg';
 import bgLoginSrc from '@/assets/images/bg-login.jpg';
 
@@ -14,6 +15,7 @@ const signupToken = (route.query.signupToken as string | undefined) || '';
 const nickname = ref('');
 const language = ref('JAVA');
 const isSubmitting = ref(false);
+const errorMessage = ref<string | null>(null);
 
 const languages = [
     { value: 'JAVA', label: 'Java' },
@@ -36,7 +38,10 @@ async function handleSignup() {
         router.replace({ name: 'MAIN' });
     } catch (e) {
         console.error(e);
-        alert('회원가입 실패');
+        errorMessage.value = MESSAGES.AUTH.SIGNUP_FAILED;
+        setTimeout(() => {
+            errorMessage.value = null;
+        }, 3000);
     } finally {
         isSubmitting.value = false;
     }
@@ -53,7 +58,9 @@ async function handleSignup() {
 
         <div class="signup-form">
             <h2 class="title">Complete Your Profile</h2>
-            
+
+            <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
+
             <div class="form-group">
                 <label>NICKNAME</label>
                 <input v-model="nickname" type="text" placeholder="Enter your nickname" />
@@ -204,5 +211,22 @@ async function handleSignup() {
         opacity: 0.5;
         cursor: not-allowed;
     }
+}
+
+.error-message {
+    color: var(--color-accent-red);
+    font-size: calc(var(--gu) * 0.85);
+    text-align: center;
+    padding: calc(var(--gu) * 0.75);
+    background: rgba(255, 77, 109, 0.1);
+    border: calc(var(--gu) * 0.0625) solid var(--color-accent-red);
+    border-radius: var(--radius-sm);
+    animation: shake 0.3s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
 }
 </style>

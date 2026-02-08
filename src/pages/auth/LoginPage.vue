@@ -1,23 +1,20 @@
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { MESSAGES } from '@/shared/constants/messages';
 import logoSrc from '@/assets/images/logo.svg';
 import bgLoginSrc from '@/assets/images/bg-login.jpg';
 
 const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
+const errorMessage = ref<string | null>(null);
 
 const KAKAO_AUTH_URL = `https://kauth.kakao.com/oauth/authorize?client_id=${import.meta.env.VITE_KAKAO_CLIENT_ID}&redirect_uri=${import.meta.env.VITE_REDIRECT_URI}&response_type=code`;
 
 async function handleLogin() {
   window.location.href = KAKAO_AUTH_URL;
-}
-
-async function handleDevLogin() {
-    await authStore.mockLogin();
-    router.replace({ name: 'MAIN' });
 }
 
 onMounted(async () => {
@@ -35,7 +32,10 @@ onMounted(async () => {
       }
     } catch (e) {
       console.error('Login failed', e);
-      alert('로그인 처리에 실패했습니다.');
+      errorMessage.value = MESSAGES.AUTH.LOGIN_FAILED;
+      setTimeout(() => {
+        errorMessage.value = null;
+      }, 3000);
       router.replace({ name: 'LOGIN' });
     }
   }
@@ -51,11 +51,9 @@ onMounted(async () => {
         </div>
         
         <div class="login-actions">
+            <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
             <button v-if="!route.query.code" class="kakao-button" @click="handleLogin">
                 카카오 로그인
-            </button>
-            <button v-if="!route.query.code" class="dev-button" @click="handleDevLogin">
-                [QA] 임시 로그인 (Pass)
             </button>
             <p v-else class="loading">
                 로그인 처리 중...
@@ -134,24 +132,25 @@ onMounted(async () => {
     }
 }
 
-.dev-button {
-    width: 100%;
-    background-color: transparent;
-    border: calc(var(--gu) * 0.0625) solid var(--color-border-subtle);
-    color: var(--color-text-muted);
-    padding: calc(var(--gu) * 0.5);
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    font-size: calc(var(--gu) * 0.8);
-    transition: all 0.2s;
-    &:hover {
-        border-color: var(--color-text-primary);
-        color: var(--color-text-primary);
-    }
-}
-
 .loading {
     color: var(--color-text-muted);
     font-size: calc(var(--gu) * 1.1);
+}
+
+.error-message {
+    color: var(--color-accent-red);
+    font-size: calc(var(--gu) * 0.9);
+    text-align: center;
+    padding: calc(var(--gu) * 0.75);
+    background: rgba(255, 77, 109, 0.1);
+    border: calc(var(--gu) * 0.0625) solid var(--color-accent-red);
+    border-radius: var(--radius-sm);
+    animation: shake 0.3s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
 }
 </style>

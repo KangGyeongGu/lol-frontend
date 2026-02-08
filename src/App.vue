@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, watch } from 'vue';
 import { useAuthStore } from '@/stores/useAuthStore';
-import { EventDispatcher } from '@/api/realtime/EventDispatcher';
-import { stompClient } from '@/api/realtime/StompClient';
+import { EventDispatcher } from '@/realtime/EventDispatcher';
+import { stompClient } from '@/realtime/StompClient';
 
 const authStore = useAuthStore();
 
-// Global socket management
 onMounted(() => {
     if (authStore.isAuthenticated) {
         authStore.fetchUserProfile();

@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { ref, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/useAuthStore';
-import { roomApi } from '@/api/room';
-import { EventDispatcher } from '@/api/realtime/EventDispatcher';
-import type { RoomDetail } from '@/api/dtos/room.types';
+import { useRoomStore } from '@/stores/useRoomStore';
+import { MESSAGES } from '@/shared/constants/messages';
+import type { RoomDetailViewModel } from '@/entities/room.model';
+import { useRoomSubscription } from './composables/useRoomSubscription';
 import BaseBadge from '@/shared/ui/BaseBadge.vue';
 import BaseButton from '@/shared/ui/BaseButton.vue';
 import ChatPanel from '@/features/chat/ui/ChatPanel.vue';
@@ -15,10 +16,13 @@ import bgMainSrc from '@/assets/images/bg-main.jpg';
 const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
+const roomStore = useRoomStore();
 
 const roomId = route.params.roomId as string;
-const room = ref<RoomDetail | null>(null);
-const isLoading = ref(true);
+const room = ref<RoomDetailViewModel | null>(null);
+const isInitialLoading = ref(true);
+const errorMessage = ref<string | null>(null);
+let lastActionTime = 0;
 
 const isHost = computed(() => {
     if (!room.value || !authStore.user) return false;
@@ -45,21 +49,33 @@ const displaySlots = computed(() => {
 });
 
 async function fetchRoomDetail() {
-    isLoading.value = true;
     try {
-        room.value = await roomApi.getRoomDetail(roomId);
+        room.value = await roomStore.getRoomDetail(roomId);
     } catch (error) {
         console.error('Failed to fetch room detail:', error);
-        alert('방 정보를 불러오는데 실패했습니다.');
-        router.push({ name: 'MAIN' });
+        errorMessage.value = MESSAGES.ROOM.FETCH_FAILED;
+        setTimeout(() => {
+            router.push({ name: 'MAIN' });
+        }, 2000);
     } finally {
-        isLoading.value = false;
+        isInitialLoading.value = false;
     }
+}
+
+// STOMP 이벤트 수신 시: 직전 사용자 액션 직후면 스킵, 아니면 조용히 갱신
+async function onLobbyEvent() {
+    if (Date.now() - lastActionTime < 1000) return;
+    try {
+        const updated = await roomStore.getRoomDetail(roomId);
+        if (room.value) {
+            room.value.players = updated.players;
+        }
+    } catch { /* 다른 유저 이벤트 갱신 실패는 무시 */ }
 }
 
 async function handleLeave() {
     try {
-        await roomApi.leaveRoom(roomId);
+        await roomStore.leaveRoom(roomId);
         router.replace({ name: 'MAIN' });
     } catch (error) {
         console.error('Leave failed:', error);
@@ -70,13 +86,13 @@ async function handleLeave() {
 async function toggleReady() {
     if (!myPlayer.value) return;
     try {
-        if (myPlayer.value.state === 'READY') {
-            room.value = await roomApi.unready(roomId);
-        } else {
-            room.value = await roomApi.ready(roomId);
+        const updated = myPlayer.value.state === 'READY'
+            ? await roomStore.unready(roomId)
+            : await roomStore.ready(roomId);
+        if (room.value) {
+            room.value.players = updated.players;
         }
-        // 소켓 이벤트에서도 fetchRoomDetail()이 트리거되겠지만, 
-        // 응답으로 받은 데이터를 바로 넣어서 즉각적인 반응성을 확보합니다.
+        lastActionTime = Date.now();
     } catch (error) {
         console.error('Toggle ready failed:', error);
     }
@@ -84,7 +100,7 @@ async function toggleReady() {
 
 async function handleStart() {
     try {
-        await roomApi.startGame(roomId);
+        await roomStore.startGame(roomId);
     } catch (error) {
         console.error('Start failed:', error);
     }
@@ -93,30 +109,24 @@ async function handleStart() {
 async function handleKick(targetUserId: string) {
     if (!isHost.value) return;
     try {
-        await roomApi.kickPlayer(roomId, targetUserId);
+        await roomStore.kickPlayer(roomId, targetUserId);
+        lastActionTime = Date.now();
     } catch (error) {
         console.error('Kick failed:', error);
     }
 }
 
-onMounted(async () => {
-    await fetchRoomDetail();
-    EventDispatcher.subscribeToRoom(roomId, () => {
-        fetchRoomDetail();
-    });
-});
-
-onUnmounted(() => {
-    EventDispatcher.unsubscribeFromRoom(roomId);
-});
+useRoomSubscription(roomId, onLobbyEvent);
+fetchRoomDetail();
 </script>
 
 <template>
   <div class="waiting-room-page" :style="{ backgroundImage: `url(${bgMainSrc})` }">
     <div class="overlay"></div>
 
-    <div v-if="isLoading" class="loading-state">
+    <div v-if="isInitialLoading" class="loading-state">
         <div class="spinner"></div>
+        <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
     </div>
 
     <!-- Scaling Content Wrapper -->
@@ -125,9 +135,9 @@ onUnmounted(() => {
         <header class="room-header">
             <h1 class="room-id">{{ room.roomName }}</h1>
             <div class="header-right">
-                <BaseBadge 
+                <BaseBadge
                     :variant="room.gameType === 'RANKED' ? 'rank' : 'normal'"
-                    :label="room.gameType === 'RANKED' ? '랭크전' : '일반전'"
+                    :label="room.gameType === 'RANKED' ? MESSAGES.GAME.RANKED : MESSAGES.GAME.NORMAL"
                 />
                 <BaseBadge variant="host">
                     방장 : {{ hostNickname }}
@@ -140,9 +150,9 @@ onUnmounted(() => {
             <!-- Left Side: Player Grid -->
             <section class="player-grid-container">
                 <div class="player-grid">
-                    <PlayerSlot 
-                        v-for="(player, idx) in displaySlots" 
-                        :key="idx" 
+                    <PlayerSlot
+                        v-for="(player, idx) in displaySlots"
+                        :key="player ? player.user.userId : `empty-${idx}`"
                         :player="player"
                         :is-host-view="isHost"
                         @kick="handleKick"
@@ -167,24 +177,24 @@ onUnmounted(() => {
 
         <!-- 3. Bottom Action Row -->
         <footer class="room-actions">
-            <BaseButton variant="secondary" @click="handleLeave">나가기</BaseButton>
+            <BaseButton variant="secondary" @click="handleLeave">{{ MESSAGES.COMMON.LEAVE }}</BaseButton>
             <div class="spacer"></div>
             <div class="right-btns">
-                <BaseButton 
-                    v-if="!isHost" 
+                <BaseButton
+                    v-if="!isHost"
                     variant="outline"
                     :class="{ active: myPlayer?.state === 'READY' }"
                     @click="toggleReady"
                 >
-                    준비 완료
+                    {{ myPlayer?.state === 'READY' ? MESSAGES.COMMON.READY_CANCEL : MESSAGES.COMMON.READY }}
                 </BaseButton>
-                <BaseButton 
-                    v-if="isHost" 
+                <BaseButton
+                    v-if="isHost"
                     variant="primary"
                     :disabled="room.players.length < 2"
                     @click="handleStart"
                 >
-                    게임 시작
+                    {{ MESSAGES.COMMON.START_GAME }}
                 </BaseButton>
             </div>
         </footer>
@@ -223,7 +233,7 @@ onUnmounted(() => {
     aspect-ratio: 16 / 9;
     display: flex;
     flex-direction: column;
-    padding: calc(var(--gu) * 1.68) calc(var(--gu) * 6); // 3vh 6vw equivalent
+    padding: calc(var(--gu) * 1.68) calc(var(--gu) * 6);
     box-sizing: border-box;
 }
 
@@ -232,11 +242,11 @@ onUnmounted(() => {
     background: var(--color-bg-panel);
     border: calc(var(--gu) * 0.125) solid var(--color-border-cyan);
     border-radius: calc(var(--gu) * 1.2);
-    padding: calc(var(--gu) * 0.67) calc(var(--gu) * 2.5); // 1.2vh 2.5vw
+    padding: calc(var(--gu) * 0.67) calc(var(--gu) * 2.5);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: calc(var(--gu) * 1.4); // 2.5vh
+    margin-bottom: calc(var(--gu) * 1.4);
     box-shadow: 0 0 calc(var(--gu) * 1.25) rgba(58, 242, 255, 0.1);
 
     .room-id {
@@ -266,7 +276,7 @@ onUnmounted(() => {
     background: rgba(18, 16, 30, 0.4);
     border: calc(var(--gu) * 0.125) solid var(--color-border-cyan);
     border-radius: calc(var(--gu) * 1.2);
-    padding: calc(var(--gu) * 1.125); // 2vh
+    padding: calc(var(--gu) * 1.125);
     overflow: hidden;
 }
 
@@ -281,7 +291,7 @@ onUnmounted(() => {
 .room-sidebar {
     display: flex;
     flex-direction: column;
-    gap: calc(var(--gu) * 1.125); // 2vh
+    gap: calc(var(--gu) * 1.125);
     min-height: 0;
 }
 
@@ -295,8 +305,8 @@ onUnmounted(() => {
     background: var(--color-bg-panel);
     border: calc(var(--gu) * 0.125) solid var(--color-border-cyan);
     border-radius: calc(var(--gu) * 1.2);
-    padding: calc(var(--gu) * 0.84) calc(var(--gu) * 2); // 1.5vh 2vw
-    margin-top: calc(var(--gu) * 1.4); // 2.5vh
+    padding: calc(var(--gu) * 0.84) calc(var(--gu) * 2);
+    margin-top: calc(var(--gu) * 1.4);
     display: flex;
     align-items: center;
 
@@ -312,12 +322,31 @@ onUnmounted(() => {
     position: absolute;
     inset: 0;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
+    gap: calc(var(--gu) * 2);
     z-index: 10;
+
+    .error-message {
+        color: var(--color-accent-red);
+        font-size: calc(var(--gu) * 1.1);
+        text-align: center;
+        padding: calc(var(--gu) * 1);
+        background: rgba(255, 77, 109, 0.1);
+        border: calc(var(--gu) * 0.0625) solid var(--color-accent-red);
+        border-radius: var(--radius-md);
+        animation: shake 0.3s ease-in-out;
+    }
 }
 
 @keyframes spin {
     to { transform: rotate(360deg); }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
 }
 </style>

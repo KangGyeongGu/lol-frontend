@@ -45,14 +45,12 @@ const router = createRouter({
     routes
 });
 
-// 네비게이션 가드: 인증 상태에 따른 라우팅 제어
 router.beforeEach((to, _from, next) => {
     const authStore = useAuthStore();
 
     if (to.meta.authRequired && !authStore.isAuthenticated) {
         next({ name: 'LOGIN' });
     } else if (to.name === 'LOGIN' && authStore.isAuthenticated) {
-        // 이미 로그인된 상태라면 메인 페이지로 이동
         next({ name: 'MAIN' });
     } else {
         next();

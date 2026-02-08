@@ -1,15 +1,14 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watch } from 'vue';
+import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useRoomStore } from '@/stores/useRoomStore';
-import { EventDispatcher } from '@/api/realtime/EventDispatcher';
-import { stompClient } from '@/api/realtime/StompClient';
-import HubPanel from './panels/HubPanel.vue';
-import RoomListPanel from './panels/RoomListPanel.vue';
+import { MESSAGES } from '@/shared/constants/messages';
+import HubPanel from './components/HubPanel.vue';
+import RoomListPanel from './components/RoomListPanel.vue';
 import CreateRoomModal from '@/widgets/CreateRoomModal.vue';
 import BaseButton from '@/shared/ui/BaseButton.vue';
-import type { CreateRoomRequest } from '@/api/dtos/room.types';
+import type { CreateRoomRequest } from '@/api/dtos/room.dto';
 import logoSrc from '@/assets/images/logo.svg';
 import bgMainSrc from '@/assets/images/bg-main.jpg';
 
@@ -43,14 +42,6 @@ async function handleCreateRoom(payload: CreateRoomRequest) {
 function switchView(mode: ViewMode) {
     viewMode.value = mode;
 }
-
-onMounted(() => {
-    // Logic removed to App.vue
-});
-
-onUnmounted(() => {
-    // Logic removed to App.vue
-});
 </script>
 
 <template>
@@ -67,8 +58,8 @@ onUnmounted(() => {
         <div class="user-menu" v-if="authStore.user">
             <span class="nickname">{{ authStore.user.nickname }}</span>
             <span class="tier">{{ authStore.user.tier }}</span>
-            <BaseButton variant="neutral" size="sm" @click="router.push({ name: 'MY_PAGE' })">마이페이지</BaseButton>
-            <BaseButton variant="danger" size="sm" @click="handleLogout">로그아웃</BaseButton>
+            <BaseButton variant="neutral" size="sm" @click="router.push({ name: 'MY_PAGE' })">{{ MESSAGES.COMMON.MYPAGE }}</BaseButton>
+            <BaseButton variant="danger" size="sm" @click="handleLogout">{{ MESSAGES.COMMON.LOGOUT }}</BaseButton>
         </div>
     </header>
     

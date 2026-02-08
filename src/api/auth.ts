@@ -3,7 +3,7 @@ import type { LoginRequest, LoginResponse, SignupRequest, SignupResponse, UserPr
 
 export const authApi = {
     login: (code: string) => {
-        return apiClient.post<LoginRequest, LoginResponse>('/auth/kakao/login', { authorizationCode: code } as LoginRequest);
+        return apiClient.post<LoginRequest, LoginResponse>('/auth/kakao/login', { authorizationCode: code });
     },
 
     signup: (req: SignupRequest) => {

@@ -3,7 +3,7 @@ import { ref, onMounted, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useRoomStore } from '@/stores/useRoomStore';
 import RoomList from '@/widgets/RoomList.vue';
-import type { GameType, RoomLanguage, RoomStatus } from '@/api/dtos/room.types';
+import type { GameType, Language, RoomStatus } from '@/api/dtos/room.types';
 import type { RoomFilterParams } from '@/api/room';
 
 const emit = defineEmits<{
@@ -19,12 +19,12 @@ const roomsPerPage = 10;
 
 const searchQuery = ref('');
 const searchTarget = ref<'TITLE' | 'HOST'>('TITLE');
-const selectedLanguage = ref<RoomLanguage | 'ALL'>('ALL');
+const selectedLanguage = ref<Language | 'ALL'>('ALL');
 const selectedMode = ref<GameType | 'ALL'>('ALL'); 
 const selectedStatus = ref<RoomStatus | 'ALL'>('ALL'); 
 const activeDropdown = ref<'LANG' | 'MODE' | 'STATUS' | 'SEARCH_BY' | null>(null);
 
-const languages: (RoomLanguage | 'ALL')[] = ['ALL', 'JAVA', 'PYTHON', 'CPP', 'JAVASCRIPT'];
+const languages: (Language | 'ALL')[] = ['ALL', 'JAVA', 'PYTHON', 'CPP', 'JAVASCRIPT'];
 const modes: (GameType | 'ALL')[] = ['ALL', 'RANKED', 'NORMAL'];
 const statuses: { label: string, value: RoomStatus | 'ALL' }[] = [
     { label: 'ALL ROOMS', value: 'ALL' },
@@ -100,7 +100,7 @@ async function refreshRooms() {
         }
     }
     
-    if (selectedLanguage.value !== 'ALL') params.language = selectedLanguage.value as RoomLanguage;
+    if (selectedLanguage.value !== 'ALL') params.language = selectedLanguage.value as Language;
     if (selectedMode.value !== 'ALL') params.gameType = selectedMode.value as GameType;
     if (selectedStatus.value !== 'ALL') params.roomStatus = selectedStatus.value as RoomStatus;
     

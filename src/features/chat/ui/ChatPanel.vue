@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, nextTick, computed } from 'vue';
+import { ref, onMounted, nextTick, computed, watch } from 'vue';
 import { useChatStore } from '../model/useChatStore';
 import BaseButton from '@/shared/ui/BaseButton.vue';
 
@@ -15,9 +15,14 @@ const messagesContainer = ref<HTMLElement | null>(null);
 
 const currentMessages = computed(() => chatStore.getMessages(props.channelId));
 
+// Watch for new messages to auto-scroll
+watch(currentMessages, () => {
+  scrollToBottom();
+}, { deep: true });
+
 function handleSend() {
   if (!newMessage.value.trim()) return;
-  chatStore.sendMessage(props.channelId, newMessage.value, props.nickname);
+  chatStore.publishMessage(props.channelId, newMessage.value);
   newMessage.value = '';
   scrollToBottom();
 }

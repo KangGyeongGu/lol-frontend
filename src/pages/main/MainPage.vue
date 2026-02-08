@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useRoomStore } from '@/stores/useRoomStore';
+import { EventDispatcher } from '@/api/realtime/EventDispatcher';
+import { stompClient } from '@/api/realtime/StompClient';
 import HubPanel from './panels/HubPanel.vue';
 import RoomListPanel from './panels/RoomListPanel.vue';
 import CreateRoomModal from '@/widgets/CreateRoomModal.vue';
@@ -41,6 +43,14 @@ async function handleCreateRoom(payload: CreateRoomRequest) {
 function switchView(mode: ViewMode) {
     viewMode.value = mode;
 }
+
+onMounted(() => {
+    // Logic removed to App.vue
+});
+
+onUnmounted(() => {
+    // Logic removed to App.vue
+});
 </script>
 
 <template>

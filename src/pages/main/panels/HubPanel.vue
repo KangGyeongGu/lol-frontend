@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useStatsStore } from '@/stores/useStatsStore';
 import ChatPanel from '@/features/chat/ui/ChatPanel.vue';
 import bannerLiveSrc from '@/assets/images/banner-live.png';
 
 const authStore = useAuthStore();
+const statsStore = useStatsStore();
 
 // 허브 패널: 메인 대시보드 뷰
 const emit = defineEmits<{
@@ -17,44 +19,25 @@ const statTab = ref<'BANNED' | 'PICKED'>('BANNED');
 const statPage = ref(0);
 const playerPage = ref(0);
 
-const bannedStats = ref([
-    { rank: 1, name: 'Graph', val: '8%' },
-    { rank: 2, name: 'DP', val: '8%' },
-    { rank: 3, name: 'String', val: '7%' },
-    { rank: 4, name: 'DFS', val: '6%' },
-    { rank: 5, name: 'Tree', val: '5%' },
-    { rank: 6, name: 'Greedy', val: '4%' },
-    { rank: 7, name: 'BFS', val: '4%' },
-    { rank: 8, name: 'Stack', val: '3%' },
-    { rank: 9, name: 'Queue', val: '2%' },
-    { rank: 10, name: 'Hash', val: '1%' },
-]);
+const bannedStats = computed(() => {
+    return [...statsStore.pickBanRates]
+        .sort((a, b) => b.banRate - a.banRate)
+        .map((item, idx) => ({ rank: idx + 1, name: item.name, val: `${Math.round(item.banRate * 100)}%` }));
+});
 
-const pickedStats = ref([
-    { rank: 1, name: 'Array', val: '15%' },
-    { rank: 2, name: 'Sort', val: '12%' },
-    { rank: 3, name: 'Math', val: '10%' },
-    { rank: 4, name: 'Impl', val: '9%' },
-    { rank: 5, name: 'Brute', val: '8%' },
-    { rank: 6, name: 'TwoPtr', val: '7%' },
-    { rank: 7, name: 'Binary', val: '6%' },
-    { rank: 8, name: 'Set', val: '5%' },
-    { rank: 9, name: 'Map', val: '4%' },
-    { rank: 10, name: 'Bit', val: '3%' },
-]);
+const pickedStats = computed(() => {
+    return [...statsStore.pickBanRates]
+        .sort((a, b) => b.pickRate - a.pickRate)
+        .map((item, idx) => ({ rank: idx + 1, name: item.name, val: `${Math.round(item.pickRate * 100)}%` }));
+});
 
-const topPlayers = ref([
-    { rank: 1, name: 'gyeong', score: '3001' },
-    { rank: 2, name: 'Alice', score: '2900' },
-    { rank: 3, name: 'Bob', score: '2800' },
-    { rank: 4, name: 'Charlie', score: '2700' },
-    { rank: 5, name: 'David', score: '2600' },
-    { rank: 6, name: 'Eve', score: '2500' },
-    { rank: 7, name: 'Frank', score: '2400' },
-    { rank: 8, name: 'Grace', score: '2300' },
-    { rank: 9, name: 'Heidi', score: '2200' },
-    { rank: 10, name: 'Ivan', score: '2100' },
-]);
+const topPlayers = computed(() => {
+    return statsStore.playerRankings.map(p => ({
+        rank: p.rank,
+        name: p.nickname,
+        score: p.score.toString()
+    }));
+});
 
 const visibleStats = computed(() => {
     const source = statTab.value === 'BANNED' ? bannedStats.value : pickedStats.value;
@@ -68,7 +51,11 @@ const visiblePlayers = computed(() => {
 });
 
 let timer: ReturnType<typeof setInterval> | undefined;
-onMounted(() => {
+onMounted(async () => {
+    // 초대 데이터 로드
+    statsStore.fetchRankings();
+    statsStore.fetchPickBanRates();
+
     timer = setInterval(() => {
         statPage.value = (statPage.value + 1) % 2;
         playerPage.value = (playerPage.value + 1) % 2;

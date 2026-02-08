@@ -1,18 +1,23 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { statsApi } from '@/api/stats';
-import type { PlayerRanking, AlgorithmPickBanRate } from '@/api/dtos/stats.types';
+import {
+    toPlayerRankingViewModel,
+    toAlgorithmPickBanRateViewModel,
+    type PlayerRankingViewModel,
+    type AlgorithmPickBanRateViewModel
+} from '@/entities/stats.model';
 
 export const useStatsStore = defineStore('stats', () => {
-    const playerRankings = ref<PlayerRanking[]>([]);
-    const pickBanRates = ref<AlgorithmPickBanRate[]>([]);
+    const playerRankings = ref<PlayerRankingViewModel[]>([]);
+    const pickBanRates = ref<AlgorithmPickBanRateViewModel[]>([]);
     const isLoading = ref(false);
 
     async function fetchRankings() {
         isLoading.value = true;
         try {
             const response = await statsApi.getPlayerRankings();
-            playerRankings.value = response.items;
+            playerRankings.value = response.items.map(toPlayerRankingViewModel);
         } catch (error) {
             console.error('[StatsStore] Fetch rankings error:', error);
         } finally {
@@ -24,7 +29,7 @@ export const useStatsStore = defineStore('stats', () => {
         isLoading.value = true;
         try {
             const response = await statsApi.getAlgorithmPickBanRates();
-            pickBanRates.value = response.items;
+            pickBanRates.value = response.items.map(toAlgorithmPickBanRateViewModel);
         } catch (error) {
             console.error('[StatsStore] Fetch rates error:', error);
         } finally {

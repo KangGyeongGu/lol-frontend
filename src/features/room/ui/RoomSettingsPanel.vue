@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import type { RoomDetail } from '@/api/dtos/room.types';
+import { MESSAGES } from '@/shared/constants/messages';
+import type { RoomDetailViewModel } from '@/entities/room.model';
 import BaseBadge from '@/shared/ui/BaseBadge.vue';
 
 interface Props {
-  room: RoomDetail;
+  room: RoomDetailViewModel;
 }
 
 defineProps<Props>();
@@ -11,22 +12,22 @@ defineProps<Props>();
 
 <template>
   <div class="settings-panel">
-    <h3 class="panel-title">방 설정</h3>
+    <h3 class="panel-title">{{ MESSAGES.ROOM.ROOM_SETTINGS }}</h3>
     <div class="settings-list">
       <div class="setting-item">
-        <span class="label">게임 유형:</span>
+        <span class="label">{{ MESSAGES.ROOM.GAME_TYPE_LABEL }}</span>
         <BaseBadge variant="cyan" :label="room.gameType" />
       </div>
       <div class="setting-item">
-        <span class="label">최대 인원:</span>
+        <span class="label">{{ MESSAGES.ROOM.MAX_PLAYERS_LABEL }}</span>
         <BaseBadge variant="cyan" :label="`${room.maxPlayers}명`" />
       </div>
       <div class="setting-item">
-        <span class="label">제한 시간:</span>
+        <span class="label">{{ MESSAGES.ROOM.TIME_LIMIT_LABEL }}</span>
         <BaseBadge variant="cyan" label="60분" />
       </div>
       <div class="setting-item">
-        <span class="label">언어:</span>
+        <span class="label">{{ MESSAGES.ROOM.LANGUAGE_SETTING_LABEL }}</span>
         <BaseBadge variant="cyan" :label="room.language" />
       </div>
     </div>

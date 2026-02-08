@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, nextTick, computed, watch } from 'vue';
-import { useChatStore } from '../model/useChatStore';
+import { useChatStore } from '@/stores/useChatStore';
 import BaseButton from '@/shared/ui/BaseButton.vue';
 
 interface Props {
@@ -15,7 +15,7 @@ const messagesContainer = ref<HTMLElement | null>(null);
 
 const currentMessages = computed(() => chatStore.getMessages(props.channelId));
 
-// Watch for new messages to auto-scroll
+// 새 메시지 수신 시 자동 스크롤
 watch(currentMessages, () => {
   scrollToBottom();
 }, { deep: true });

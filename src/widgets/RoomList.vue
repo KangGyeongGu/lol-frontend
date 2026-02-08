@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import type { RoomSummary } from '@/api/dtos/room.types';
+import { MESSAGES } from '@/shared/constants/messages';
+import type { RoomSummaryViewModel } from '@/entities/room.model';
 
 interface Props {
-  rooms: RoomSummary[];
+  rooms: RoomSummaryViewModel[];
   loading: boolean;
 }
 
@@ -18,7 +19,7 @@ const emit = defineEmits<{
         <div class="spinner"></div>
     </div>
     <div v-else-if="rooms.length === 0" class="empty-state">
-        현재 대기 중인 방이 없습니다.
+        {{ MESSAGES.EMPTY_STATE.NO_ROOMS }}
     </div>
     
     <div v-else class="grid">
@@ -50,15 +51,15 @@ const emit = defineEmits<{
             </div>
             
             <!-- 5. 참여 버튼 -->
-            <button 
-                class="join-btn" 
+            <button
+                class="join-btn"
                 :class="{ 'in-game': room.roomStatus === 'IN_GAME' }"
-                :disabled="!room.joinable" 
+                :disabled="!room.joinable"
                 @click="emit('join', room.roomId)"
             >
-                <template v-if="room.roomStatus === 'IN_GAME'">IN GAME</template>
-                <template v-else-if="!room.joinable">FULL</template>
-                <template v-else>JOIN</template>
+                <template v-if="room.roomStatus === 'IN_GAME'">{{ MESSAGES.ROOM_STATUS.IN_GAME }}</template>
+                <template v-else-if="!room.joinable">{{ MESSAGES.ROOM_STATUS.FULL }}</template>
+                <template v-else>{{ MESSAGES.COMMON.JOIN }}</template>
             </button>
         </div>
     </div>

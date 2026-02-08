@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import type { RoomPlayer } from '@/api/dtos/room.types';
+import { MESSAGES } from '@/shared/constants/messages';
+import type { RoomPlayerViewModel } from '@/entities/room.model';
 import BaseBadge from '@/shared/ui/BaseBadge.vue';
 
 interface Props {
-  player: RoomPlayer | null;
+  player: RoomPlayerViewModel | null;
+  isHostView?: boolean;
 }
 
 defineProps<Props>();
@@ -28,13 +30,13 @@ defineProps<Props>();
           <span class="tier-name">{{ player.user.tier }}</span>
           <span class="score-badge">{{ player.user.score }}</span>
         </div>
-        <BaseBadge v-if="player.isHost" variant="host" class="host-badge-pos">HOST</BaseBadge>
-        <BaseBadge v-if="player.state === 'READY'" variant="default" class="ready-badge-pos">READY</BaseBadge>
+        <BaseBadge v-if="player.isHost" variant="host" class="host-badge-pos">{{ MESSAGES.ROOM_STATUS.HOST }}</BaseBadge>
+        <BaseBadge v-if="player.state === 'READY'" variant="default" class="ready-badge-pos">{{ MESSAGES.ROOM_STATUS.READY }}</BaseBadge>
       </div>
     </template>
     <template v-else>
       <div class="empty-content">
-        <span class="placeholder-text">Waiting for player...</span>
+        <span class="placeholder-text">{{ MESSAGES.ROOM_STATUS.WAITING_PLAYER }}</span>
       </div>
     </template>
   </div>

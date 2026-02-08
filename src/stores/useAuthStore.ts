@@ -1,11 +1,12 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { authApi } from '@/api/auth';
-import { tokenStorage } from '@/utils/token.util';
-import type { UserSummary, SignupRequest } from '@/api/dtos/auth.types';
+import { tokenStorage } from '@/shared/utils/token.util';
+import type { SignupRequest } from '@/api/dtos/auth.dto';
+import { toUserViewModel, toUserProfileViewModel, type UserViewModel } from '@/entities/auth.model';
 
 export const useAuthStore = defineStore('auth', () => {
-    const user = ref<UserSummary | null>(null);
+    const user = ref<UserViewModel | null>(null);
     const accessToken = ref<string | null>(tokenStorage.getAccessToken());
     const isAuthenticated = computed(() => !!accessToken.value);
 
@@ -15,7 +16,7 @@ export const useAuthStore = defineStore('auth', () => {
             if (response.result === 'OK' && response.accessToken && response.refreshToken && response.user) {
                 tokenStorage.setTokens(response.accessToken, response.refreshToken);
                 accessToken.value = response.accessToken;
-                user.value = response.user;
+                user.value = toUserViewModel(response.user);
                 return { success: true };
             } else if (response.result === 'SIGNUP_REQUIRED' && response.signupToken) {
                 return { success: false, signupToken: response.signupToken };
@@ -26,31 +27,18 @@ export const useAuthStore = defineStore('auth', () => {
         }
     }
 
-    async function mockLogin() {
-        const mockAccess = 'mock-access-token';
-        tokenStorage.setTokens(mockAccess, 'mock-refresh-token');
-        accessToken.value = mockAccess;
-        user.value = {
-            userId: 'host-user-01',
-            nickname: 'DevHost',
-            tier: 'GOLD',
-            score: 1200
-        };
-        return { success: true };
-    }
-
     async function signup(req: SignupRequest) {
         const response = await authApi.signup(req);
         tokenStorage.setTokens(response.accessToken, response.refreshToken);
         accessToken.value = response.accessToken;
-        user.value = response.user;
+        user.value = toUserViewModel(response.user);
     }
 
     async function fetchUserProfile() {
         if (!accessToken.value) return;
         try {
             const profile = await authApi.getMe();
-            user.value = profile;
+            user.value = toUserProfileViewModel(profile);
         } catch (error) {
             console.error('[AuthStore] Fetch profile error:', error);
         }
@@ -70,7 +58,6 @@ export const useAuthStore = defineStore('auth', () => {
         user,
         isAuthenticated,
         login,
-        mockLogin,
         signup,
         fetchUserProfile,
         logout

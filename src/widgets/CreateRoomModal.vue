@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import type { CreateRoomRequest, RoomLanguage } from '@/api/dtos/room.types';
+import { MESSAGES } from '@/shared/constants/messages';
+import type { CreateRoomRequest } from '@/api/dtos/room.dto';
+import type { Language } from '@/entities/room.model';
 
 const emit = defineEmits<{
   (e: 'close'): void;
@@ -10,10 +12,10 @@ const emit = defineEmits<{
 const roomName = ref('');
 const gameType = ref<'RANKED' | 'NORMAL'>('RANKED');
 const maxPlayers = ref(4);
-const language = ref<RoomLanguage>('PYTHON');
+const language = ref<Language>('PYTHON');
 
 const participantOptions = [2, 3, 4, 5, 6];
-const languageOptions: { label: string, value: RoomLanguage }[] = [
+const languageOptions: { label: string, value: Language }[] = [
     { label: 'Python', value: 'PYTHON' },
     { label: 'Java', value: 'JAVA' },
     { label: 'C++', value: 'CPP' },
@@ -37,40 +39,40 @@ function submit() {
         <div class="stripes-bg"></div>
 
         <header class="modal-header">
-            <h2 class="title">새 게임 생성</h2>
+            <h2 class="title">{{ MESSAGES.ROOM.NEW_ROOM_TITLE }}</h2>
             <button class="close-icon-btn" @click="emit('close')">×</button>
         </header>
         
         <div class="modal-body">
             <div class="form-section">
                 <div class="section-header">
-                    <label>방 이름</label>
+                    <label>{{ MESSAGES.ROOM.ROOM_NAME_LABEL }}</label>
                     <span class="char-count">{{ roomName.length }} / 30</span>
                 </div>
                 <div class="input-wrapper">
-                    <input v-model="roomName" type="text" placeholder="배틀룸 이름을 입력하세요..." maxlength="30" />
+                    <input v-model="roomName" type="text" :placeholder="MESSAGES.ROOM.ROOM_NAME_PLACEHOLDER" maxlength="30" />
                 </div>
             </div>
             
             <div class="mode-toggle-group">
-                <button 
-                    class="mode-btn ranked" 
+                <button
+                    class="mode-btn ranked"
                     :class="{ active: gameType === 'RANKED' }"
                     @click="gameType = 'RANKED'"
                 >
-                    랭크 게임
+                    {{ MESSAGES.GAME.RANKED_GAME }}
                 </button>
-                <button 
-                    class="mode-btn normal" 
+                <button
+                    class="mode-btn normal"
                     :class="{ active: gameType === 'NORMAL' }"
                     @click="gameType = 'NORMAL'"
                 >
-                    일반 게임
+                    {{ MESSAGES.GAME.NORMAL_GAME }}
                 </button>
             </div>
             
             <div class="form-section">
-                <label>참가 인원</label>
+                <label>{{ MESSAGES.ROOM.PARTICIPANTS_LABEL }}</label>
                 <div class="pill-group">
                     <button 
                         v-for="count in participantOptions" 
@@ -88,7 +90,7 @@ function submit() {
             </div>
 
             <div class="form-section">
-                <label>사용 언어</label>
+                <label>{{ MESSAGES.ROOM.LANGUAGE_LABEL }}</label>
                 <div class="lang-grid">
                     <button 
                         v-for="opt in languageOptions" 
@@ -104,8 +106,8 @@ function submit() {
         </div>
 
         <footer class="modal-footer">
-            <button class="btn-footer cancel" @click="emit('close')">취소</button>
-            <button class="btn-footer create" @click="submit" :disabled="!roomName">배틀룸 생성</button>
+            <button class="btn-footer cancel" @click="emit('close')">{{ MESSAGES.COMMON.CANCEL }}</button>
+            <button class="btn-footer create" @click="submit" :disabled="!roomName">{{ MESSAGES.ROOM.CREATE_ROOM_BTN }}</button>
         </footer>
     </div>
   </div>

@@ -1,10 +1,16 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import { roomApi, type RoomFilterParams } from '@/api/room';
-import type { RoomSummary, CreateRoomRequest } from '@/api/dtos/room.types';
+import { roomApi } from '@/api/room';
+import type { CreateRoomRequest, RoomFilterParams } from '@/api/dtos/room.dto';
+import {
+    toRoomSummaryViewModel,
+    toRoomDetailViewModel,
+    type RoomSummaryViewModel,
+    type RoomDetailViewModel
+} from '@/entities/room.model';
 
 export const useRoomStore = defineStore('room', () => {
-    const rooms = ref<RoomSummary[]>([]);
+    const rooms = ref<RoomSummaryViewModel[]>([]);
     const totalRoomsCount = ref(0);
     const isLoading = ref(false);
     const listVersion = ref(0);
@@ -13,7 +19,7 @@ export const useRoomStore = defineStore('room', () => {
         isLoading.value = true;
         try {
             const response = await roomApi.getRooms(params);
-            rooms.value = response.items;
+            rooms.value = response.items.map(toRoomSummaryViewModel);
             listVersion.value = response.listVersion;
             // TODO: 필요한 경우 페이징 처리를 위한 전체 카운트 처리 추가
         } catch (error) {
@@ -43,6 +49,16 @@ export const useRoomStore = defineStore('room', () => {
         }
     }
 
+    async function getRoomDetail(roomId: string): Promise<RoomDetailViewModel> {
+        try {
+            const dto = await roomApi.getRoomDetail(roomId);
+            return toRoomDetailViewModel(dto);
+        } catch (error) {
+            console.error('[RoomStore] GetRoomDetail error:', error);
+            throw error;
+        }
+    }
+
     async function leaveRoom(roomId: string) {
         try {
             await roomApi.leaveRoom(roomId);
@@ -52,18 +68,20 @@ export const useRoomStore = defineStore('room', () => {
         }
     }
 
-    async function ready(roomId: string) {
+    async function ready(roomId: string): Promise<RoomDetailViewModel> {
         try {
-            await roomApi.ready(roomId);
+            const dto = await roomApi.ready(roomId);
+            return toRoomDetailViewModel(dto);
         } catch (error) {
             console.error('[RoomStore] Ready error:', error);
             throw error;
         }
     }
 
-    async function unready(roomId: string) {
+    async function unready(roomId: string): Promise<RoomDetailViewModel> {
         try {
-            await roomApi.unready(roomId);
+            const dto = await roomApi.unready(roomId);
+            return toRoomDetailViewModel(dto);
         } catch (error) {
             console.error('[RoomStore] Unready error:', error);
             throw error;
@@ -90,7 +108,7 @@ export const useRoomStore = defineStore('room', () => {
 
     // --- Real-time Handlers ---
 
-    function handleRoomUpsert(room: RoomSummary) {
+    function handleRoomUpsert(room: RoomSummaryViewModel) {
         const index = rooms.value.findIndex(r => r.roomId === room.roomId);
         if (index !== -1) {
             rooms.value[index] = room;
@@ -103,11 +121,8 @@ export const useRoomStore = defineStore('room', () => {
         rooms.value = rooms.value.filter(r => r.roomId !== roomId);
     }
 
-    function handleLobbyEvent(type: string, data: any) {
-        console.log(`[RoomStore] Lobby event: ${type}`, data);
-        // 특정 대기실에 있을 때 정보를 다시 불러오도록 트리거하거나 
-        // 데이터 구조에 따라 부분 업데이트를 수행할 수 있습니다.
-        // 현재는 단순 로깅만 처리하고, 실제 인게임 진입 등 중요한 상태 변화는 페이지에서 처리하도록 합니다.
+    function handleLobbyEvent(_type: string, _data: unknown) {
+        // 실제 인게임 진입 등 중요한 상태 변화는 페이지에서 처리
     }
 
     return {
@@ -116,6 +131,7 @@ export const useRoomStore = defineStore('room', () => {
         listVersion,
         totalRoomsCount,
         fetchRooms,
+        getRoomDetail,
         createRoom,
         joinRoom,
         leaveRoom,

@@ -3,10 +3,10 @@ import { ref, computed } from 'vue';
 import { authApi } from '@/api/auth';
 import { tokenStorage } from '@/shared/utils/token.util';
 import type { SignupRequest } from '@/api/dtos/auth.dto';
-import { toUserViewModel, toUserProfileViewModel, type UserViewModel } from '@/entities/auth.model';
+import { toUserViewModel, toUserProfileViewModel, type UserViewModel, type UserProfileViewModel } from '@/entities/auth.model';
 
 export const useAuthStore = defineStore('auth', () => {
-    const user = ref<UserViewModel | null>(null);
+    const user = ref<UserViewModel | UserProfileViewModel | null>(null);
     const accessToken = ref<string | null>(tokenStorage.getAccessToken());
     const isAuthenticated = computed(() => !!accessToken.value);
 

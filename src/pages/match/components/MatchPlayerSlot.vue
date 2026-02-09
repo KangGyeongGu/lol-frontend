@@ -1,26 +1,55 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import { MESSAGES } from '@/shared/constants/messages';
 import type { RoomPlayerViewModel } from '@/entities/room.model';
+import type { GamePlayerViewModel } from '@/entities/game.model';
+import { getTierIconPath } from '@/shared/utils/assetMapper.util';
 
 interface Props {
-  player: RoomPlayerViewModel | null;
+  player: RoomPlayerViewModel | GamePlayerViewModel | null;
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
+
+// 플레이어 데이터 정규화 (두 가지 타입 모두 처리)
+const normalizedPlayer = computed(() => {
+  if (!props.player) return null;
+
+  // RoomPlayerViewModel 타입인 경우
+  if ('user' in props.player) {
+    return {
+      nickname: props.player.user.nickname,
+      tier: props.player.user.tier,
+      score: props.player.user.score,
+    };
+  }
+
+  // GamePlayerViewModel 타입인 경우
+  return {
+    nickname: props.player.nickname,
+    tier: props.player.tier || 'IRON', // tier가 없으면 최하위 티어 기본값
+    score: props.player.score,
+  };
+});
 </script>
 
 <template>
-  <div class="match-player-slot" :class="{ empty: !player }">
-    <template v-if="player">
-      <div class="player-avatar">
-        <div class="avatar-icon"></div>
+  <div class="match-player-slot" :class="{ empty: !normalizedPlayer }">
+    <template v-if="normalizedPlayer">
+      <div class="player-tier-icon">
+        <img
+          :src="getTierIconPath(normalizedPlayer.tier)"
+          :alt="normalizedPlayer.tier"
+        />
       </div>
       <div class="player-name-section">
-        <span class="nickname">{{ player.user.nickname }}</span>
+        <span class="nickname">{{ normalizedPlayer.nickname }}</span>
       </div>
       <div class="player-meta-section">
-        <span class="tier">{{ player.user.tier }}</span>
-        <span class="score">{{ player.user.score }}</span>
+        <div class="tier-section">
+          <span class="tier">{{ normalizedPlayer.tier }}</span>
+        </div>
+        <span class="score">{{ normalizedPlayer.score }}</span>
       </div>
     </template>
     <div v-else class="empty-info">
@@ -47,20 +76,19 @@ defineProps<Props>();
     justify-content: center;
   }
 
-  .player-avatar {
+  .player-tier-icon {
     width: calc(var(--gu) * 3);
     height: calc(var(--gu) * 3);
-    border: 1px solid var(--color-accent-yellow);
-    background: rgba(255, 210, 72, 0.1);
-    border-radius: 4px;
+    flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
 
-    .avatar-icon {
-      width: 80%;
-      height: 80%;
-      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%23FFD248" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>') center/contain no-repeat;
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      filter: drop-shadow(0 0 calc(var(--gu) * 0.5) rgba(255, 210, 72, 0.3));
     }
   }
 
@@ -79,20 +107,26 @@ defineProps<Props>();
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    gap: 2px;
+    gap: calc(var(--gu) * 0.25);
 
-    .tier {
-      font-size: 10px;
-      color: var(--color-text-muted);
-      letter-spacing: 1px;
+    .tier-section {
+      display: flex;
+      align-items: center;
+      gap: calc(var(--gu) * 0.5);
+
+      .tier {
+        font-size: calc(var(--gu) * 0.625);
+        color: var(--color-text-muted);
+        letter-spacing: 1px;
+      }
     }
 
     .score {
-      font-size: 10px;
+      font-size: calc(var(--gu) * 0.625);
       background: var(--color-accent-yellow);
       color: black;
-      padding: 0 6px;
-      border-radius: 10px;
+      padding: 0 calc(var(--gu) * 0.375);
+      border-radius: calc(var(--gu) * 0.625);
       font-weight: 900;
       font-family: var(--font-mono);
     }
@@ -100,7 +134,7 @@ defineProps<Props>();
 
   .empty-info {
     color: var(--color-text-muted);
-    font-size: 10px;
+    font-size: calc(var(--gu) * 0.625);
     letter-spacing: 2px;
   }
 }

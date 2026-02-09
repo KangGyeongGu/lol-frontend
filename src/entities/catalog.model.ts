@@ -8,6 +8,7 @@ export interface AlgorithmViewModel {
 export interface ItemViewModel {
     itemId: string;
     name: string;
+    iconKey: string;
     description: string | null;
     durationSec: number;
     price: number;
@@ -16,6 +17,7 @@ export interface ItemViewModel {
 export interface SpellViewModel {
     spellId: string;
     name: string;
+    iconKey: string;
     description: string | null;
     durationSec: number;
     price: number;

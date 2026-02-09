@@ -20,6 +20,7 @@ export interface GamePlayerViewModel {
     userId: string;
     nickname: string;
     score: number;
+    tier?: string; // 옵셔널: API 응답에 포함될 수도, 안 될 수도 있음
 }
 
 export interface InventoryItemViewModel {
@@ -123,10 +124,13 @@ export interface SpellPurchasedViewModel {
 export interface GameResultViewModel {
     userId: string;
     nickname: string;
+    tier?: string; // 플레이어 티어 (IRON, BRONZE, SILVER, GOLD, etc.)
     result: 'WIN' | 'LOSE' | 'DRAW';
     rankInGame: number;
     scoreDelta: number;
+    coinBefore: number;
     coinDelta: number;
+    expBefore: number;
     expDelta: number;
     finalScoreValue: number;
     solved: boolean;

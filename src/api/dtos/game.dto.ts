@@ -1,4 +1,5 @@
 import type { GameType, GameStage } from './room.dto';
+import type { CommandMeta } from '@/shared/types/realtime.types';
 
 export interface GamePlayer {
     userId: string;
@@ -44,6 +45,15 @@ export interface ShopItemRequest {
 export interface ShopSpellRequest {
     spellId: string;
     quantity: number;
+}
+
+/**
+ * 코드 제출 요청
+ * OPENAPI.yaml.md line 1687-1717
+ */
+export interface SubmissionRequest {
+    language: 'JAVA' | 'PYTHON' | 'CPP' | 'JAVASCRIPT';
+    sourceCode: string;
 }
 
 // --- Event Payloads (STOMP) ---
@@ -99,10 +109,13 @@ export interface GameSpellPurchasedEvent {
 export interface GameFinishedResult {
     userId: string;
     nickname: string;
+    tier?: string; // 플레이어 티어 (IRON, BRONZE, SILVER, GOLD, etc.)
     result: 'WIN' | 'LOSE' | 'DRAW';
     rankInGame: number;
     scoreDelta: number;
+    coinBefore: number;
     coinDelta: number;
+    expBefore: number;
     expDelta: number;
     finalScoreValue: number;
     solved: boolean;
@@ -113,4 +126,102 @@ export interface GameFinishedEvent {
     roomId: string;
     finishedAt: string;
     results: GameFinishedResult[];
+}
+
+/**
+ * 아이템 효과 적용 이벤트
+ * EVENTS.md line 300-314
+ */
+export interface ItemEffectAppliedEvent {
+    effectId: string;
+    gameId: string;
+    itemId: string;
+    fromUserId: string;
+    toUserId: string;
+    durationSec: number;
+    startedAt: string;
+    expiresAt: string;
+}
+
+/**
+ * 스펠 효과 적용 이벤트
+ * EVENTS.md line 316-328
+ */
+export interface SpellEffectAppliedEvent {
+    effectId: string;
+    gameId: string;
+    spellId: string;
+    userId: string;
+    durationSec: number;
+    startedAt: string;
+    expiresAt: string;
+}
+
+/**
+ * 아이템 효과 차단 이벤트
+ * EVENTS.md line 330-342
+ */
+export interface ItemEffectBlockedEvent {
+    effectId: string;
+    gameId: string;
+    itemId: string;
+    fromUserId: string;
+    toUserId: string;
+    blockedBySpellId: string;
+    blockedAt: string;
+}
+
+/**
+ * 효과 제거 이벤트
+ * EVENTS.md line 344-355
+ */
+export interface EffectRemovedEvent {
+    effectId: string;
+    gameId: string;
+    effectType: 'ITEM' | 'SPELL';
+    targetUserId: string;
+    reason: 'EXPIRED' | 'DISPELLED' | 'CONSUMED';
+    removedAt: string;
+}
+
+// --- Command Payloads (STOMP) ---
+
+/**
+ * TYPING_UPDATE Command
+ * CONVENTIONS.md § 3.2, COMMANDS.md § 2.2
+ * Destination: /app/rooms/{roomId}/typing
+ */
+export interface TypingUpdatePayload {
+    type: 'TYPING_UPDATE';
+    data: {
+        isTyping: boolean;
+    };
+    meta: CommandMeta;
+}
+
+/**
+ * ITEM_USE Command
+ * CONVENTIONS.md § 3.2, COMMANDS.md § 2.3
+ * Destination: /app/games/{gameId}/items.use
+ */
+export interface ItemUsePayload {
+    type: 'ITEM_USE';
+    data: {
+        itemId: string;
+        targetUserId: string;
+    };
+    meta: CommandMeta;
+}
+
+/**
+ * SPELL_USE Command
+ * CONVENTIONS.md § 3.2, COMMANDS.md § 2.4
+ * Destination: /app/games/{gameId}/spells.use
+ */
+export interface SpellUsePayload {
+    type: 'SPELL_USE';
+    data: {
+        spellId: string;
+    };
+    meta: CommandMeta;
 }

@@ -6,6 +6,7 @@ export interface AlgorithmSummary {
 export interface ItemSummary {
     itemId: string;
     name: string;
+    iconKey: string;
     description: string | null;
     durationSec: number;
     price: number;
@@ -14,6 +15,7 @@ export interface ItemSummary {
 export interface SpellSummary {
     spellId: string;
     name: string;
+    iconKey: string;
     description: string | null;
     durationSec: number;
     price: number;

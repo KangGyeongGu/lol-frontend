@@ -26,6 +26,7 @@ export const useChatStore = defineStore('chat', () => {
      * Send message to server via EventDispatcher
      */
     function publishMessage(channelId: string, content: string) {
+        console.log('[ChatStore] publishMessage called:', { channelId, content });
         EventDispatcher.sendChatMessage(channelId, content);
     }
 
@@ -34,6 +35,13 @@ export const useChatStore = defineStore('chat', () => {
      */
     function receiveMessage(channelId: string, content: string, sender: string) {
         const id = channelId === 'global' ? 'global' : channelId;
+        console.log('[ChatStore] receiveMessage:', {
+            channelId,
+            normalizedId: id,
+            content,
+            sender,
+            currentUser: authStore.user?.nickname,
+        });
         const channelMessages = getMessages(id);
 
         const newMessage: ChatMessage = {
@@ -51,6 +59,8 @@ export const useChatStore = defineStore('chat', () => {
         if (channelMessages.length > 50) {
             channelMessages.shift();
         }
+
+        console.log('[ChatStore] Message added. Total messages for', id, ':', channelMessages.length);
     }
 
     function clearMessages(channelId: string) {

@@ -2,6 +2,7 @@
 import { MESSAGES } from '@/shared/constants/messages';
 import type { RoomPlayerViewModel } from '@/entities/room.model';
 import BaseBadge from '@/shared/ui/BaseBadge.vue';
+import { getTierIconPath } from '@/shared/utils/assetMapper.util';
 
 interface Props {
   player: RoomPlayerViewModel | null;
@@ -23,10 +24,10 @@ defineProps<Props>();
     <template v-if="player">
       <div class="slot-content">
         <div class="player-header">
-          <div class="avatar-icon"></div>
           <span class="nickname">{{ player.user.nickname }}</span>
         </div>
         <div class="tier-info">
+          <img :src="getTierIconPath(player.user.tier)" :alt="player.user.tier" class="tier-icon" />
           <span class="tier-name">{{ player.user.tier }}</span>
           <span class="score-badge">{{ player.user.score }}</span>
         </div>
@@ -71,15 +72,6 @@ defineProps<Props>();
     .player-header {
       display: flex;
       align-items: center;
-      gap: 0.8vw;
-
-      .avatar-icon {
-        width: 2.8vw; height: 2.8vw;
-        background: rgba(255, 210, 72, 0.1) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="%23FFD248" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>') no-repeat center;
-        background-size: 60%;
-        border: 1px solid var(--color-accent-yellow);
-        border-radius: 0.5vw;
-      }
 
       .nickname {
         font-family: var(--font-display);
@@ -90,22 +82,34 @@ defineProps<Props>();
     }
 
     .tier-info {
+      display: flex;
+      align-items: center;
+      gap: 0.6vw;
+
+      .tier-icon {
+        width: 2vw;
+        height: 2vw;
+        object-fit: contain;
+        flex-shrink: 0;
+      }
+
       .tier-name {
         font-family: var(--font-display);
-        font-size: clamp(1.1rem, 1.6vw, 1.5rem);
-        font-weight: 900;
-        display: block;
+        font-size: clamp(0.9rem, 1.2vw, 1.2rem);
+        font-weight: 700;
         color: white;
+        flex-shrink: 0;
       }
+
       .score-badge {
         display: inline-block;
-        margin-top: 0.5vh;
         background: rgba(255, 255, 255, 0.08);
         padding: 0.2vh 0.8vw;
         border-radius: 0.4vw;
         font-family: var(--font-mono);
         color: var(--color-accent-yellow);
         font-size: clamp(0.65rem, 0.8vw, 0.9rem);
+        margin-left: auto;
       }
     }
 

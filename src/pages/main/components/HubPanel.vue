@@ -4,6 +4,7 @@ import { useAuthStore } from '@/stores/useAuthStore';
 import { useStatsStore } from '@/stores/useStatsStore';
 import ChatPanel from '@/features/chat/ui/ChatPanel.vue';
 import bannerLiveSrc from '@/assets/images/banner-live.png';
+import { getTierIconPath } from '@/shared/utils/assetMapper.util';
 
 const authStore = useAuthStore();
 const statsStore = useStatsStore();
@@ -34,7 +35,9 @@ const topPlayers = computed(() => {
     return statsStore.playerRankings.map(p => ({
         rank: p.rank,
         name: p.nickname,
-        score: p.score.toString()
+        score: p.score.toString(),
+        tier: p.tier,
+        tierIconPath: getTierIconPath(p.tier)
     }));
 });
 
@@ -131,6 +134,7 @@ onUnmounted(() => {
                         <span class="rank" :class="{ gold: player.rank===1, silver: player.rank===2 }">
                             {{ player.rank }}
                         </span>
+                        <img :src="player.tierIconPath" :alt="player.tier" class="tier-icon" />
                         <span class="name">{{ player.name }}</span>
                         <span class="score">{{ player.score }}</span>
                     </li>
@@ -318,6 +322,13 @@ onUnmounted(() => {
 
                 &.gold { color: #FFD700; }
                 &.silver { color: #C0C0C0; }
+            }
+            .tier-icon {
+                width: calc(var(--gu) * 2);
+                height: calc(var(--gu) * 2);
+                object-fit: contain;
+                flex-shrink: 0;
+                margin-left: var(--space-2);
             }
             .name {
                 flex: 1;

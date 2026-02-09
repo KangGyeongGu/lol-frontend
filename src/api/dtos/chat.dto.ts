@@ -1,3 +1,5 @@
+import type { CommandMeta } from '@/shared/types/realtime.types';
+
 /**
  * Chat-related data transfer objects and view models
  */
@@ -15,6 +17,7 @@ export interface ChatMessage {
 
 /**
  * Payload for sending a chat message via WebSocket
+ * CONVENTIONS.md § 3.2 Command Envelope
  */
 export interface ChatSendPayload {
     type: 'CHAT_SEND';
@@ -24,4 +27,5 @@ export interface ChatSendPayload {
         message: string;
         clientMessageId: string;
     };
+    meta: CommandMeta;
 }

@@ -13,7 +13,13 @@ const chatStore = useChatStore();
 const newMessage = ref('');
 const messagesContainer = ref<HTMLElement | null>(null);
 
-const currentMessages = computed(() => chatStore.getMessages(props.channelId));
+console.log('[ChatPanel] Initialized with channelId:', props.channelId);
+
+const currentMessages = computed(() => {
+  const messages = chatStore.getMessages(props.channelId);
+  console.log('[ChatPanel] currentMessages computed for channelId:', props.channelId, 'count:', messages.length);
+  return messages;
+});
 
 // 새 메시지 수신 시 자동 스크롤
 watch(currentMessages, () => {
@@ -22,6 +28,10 @@ watch(currentMessages, () => {
 
 function handleSend() {
   if (!newMessage.value.trim()) return;
+  console.log('[ChatPanel] handleSend called:', {
+    channelId: props.channelId,
+    message: newMessage.value,
+  });
   chatStore.publishMessage(props.channelId, newMessage.value);
   newMessage.value = '';
   scrollToBottom();

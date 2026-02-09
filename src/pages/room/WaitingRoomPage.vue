@@ -176,9 +176,9 @@ fetchRoomDetail();
 
                 <!-- Chat Panel -->
                 <div class="chat-container">
-                    <ChatPanel 
-                        :channel-id="`room-${roomId}`"
-                        :nickname="authStore.user?.nickname || 'Guest'" 
+                    <ChatPanel
+                        :channel-id="roomId"
+                        :nickname="authStore.user?.nickname || 'Guest'"
                     />
                 </div>
             </aside>
@@ -237,8 +237,8 @@ fetchRoomDetail();
     z-index: 2;
     width: 100%;
     height: 100%;
-    max-width: 1600px;
-    max-height: 900px;
+    max-width: calc(var(--gu) * 100);
+    max-height: calc(var(--gu) * 56.25);
     aspect-ratio: 16 / 9;
     display: flex;
     flex-direction: column;

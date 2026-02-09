@@ -2,7 +2,12 @@ import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { gameApi } from '@/api/game';
 import { useServerClock } from '@/shared/composables/useServerClock';
-import type { BanPickRequest, ShopItemRequest, ShopSpellRequest } from '@/api/dtos/game.dto';
+import type {
+    BanPickRequest,
+    ShopItemRequest,
+    ShopSpellRequest,
+    SubmissionRequest,
+} from '@/api/dtos/game.dto';
 import {
     toGameStateViewModel,
     toStageChangedViewModel,
@@ -13,7 +18,6 @@ import {
     toGameFinishedViewModel,
     toInventoryViewModel,
     type GameStateViewModel,
-    type StageChangedViewModel,
     type GameFinishedViewModel,
 } from '@/entities/game.model';
 import type { GameStage } from '@/api/dtos/room.dto';
@@ -25,6 +29,10 @@ import type {
     GameSpellPurchasedEvent,
     GameFinishedEvent,
     Inventory,
+    ItemEffectAppliedEvent,
+    SpellEffectAppliedEvent,
+    ItemEffectBlockedEvent,
+    EffectRemovedEvent,
 } from '@/api/dtos/game.dto';
 
 export interface BanPickEntry {
@@ -110,6 +118,17 @@ export const useGameStore = defineStore('game', () => {
         }
     }
 
+    async function submitCode(id: string, req: SubmissionRequest): Promise<GameStateViewModel> {
+        try {
+            const dto = await gameApi.submitCode(id, req);
+            gameState.value = toGameStateViewModel(dto);
+            return gameState.value;
+        } catch (error) {
+            console.error('[GameStore] Submit code error:', error);
+            throw error;
+        }
+    }
+
     // --- Real-time Event Handlers ---
 
     function handleStageChanged(data: GameStageChangedEvent) {
@@ -179,6 +198,26 @@ export const useGameStore = defineStore('game', () => {
         }
     }
 
+    function handleItemEffectApplied(data: ItemEffectAppliedEvent) {
+        console.log('[GameStore] Item effect applied:', data);
+        // TODO: 이펙트 UI 표시 로직 (추후 activeEffects 상태 추가 가능)
+    }
+
+    function handleSpellEffectApplied(data: SpellEffectAppliedEvent) {
+        console.log('[GameStore] Spell effect applied:', data);
+        // TODO: 이펙트 UI 표시 로직
+    }
+
+    function handleItemEffectBlocked(data: ItemEffectBlockedEvent) {
+        console.log('[GameStore] Item effect blocked:', data);
+        // TODO: 차단 피드백 표시
+    }
+
+    function handleEffectRemoved(data: EffectRemovedEvent) {
+        console.log('[GameStore] Effect removed:', data);
+        // TODO: 이펙트 UI 제거
+    }
+
     function reset() {
         gameState.value = null;
         stageDeadlineAt.value = null;
@@ -208,6 +247,7 @@ export const useGameStore = defineStore('game', () => {
         submitPick,
         purchaseItem,
         purchaseSpell,
+        submitCode,
 
         // Event Handlers
         handleStageChanged,
@@ -217,6 +257,10 @@ export const useGameStore = defineStore('game', () => {
         handleSpellPurchased,
         handleInventorySync,
         handleGameFinished,
+        handleItemEffectApplied,
+        handleSpellEffectApplied,
+        handleItemEffectBlocked,
+        handleEffectRemoved,
 
         // Cleanup
         reset,

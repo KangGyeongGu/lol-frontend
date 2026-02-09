@@ -128,14 +128,14 @@ function submit() {
 
 .modal-container {
     position: relative;
-    width: 800px;
-    background: #12101E;
-    border: 2px solid #3AF2FF;
-    border-radius: 24px;
+    width: calc(var(--gu) * 50);
+    background: var(--color-bg-panelStrong);
+    border: calc(var(--gu) * 0.125) solid var(--color-accent-cyan);
+    border-radius: var(--radius-xl);
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    box-shadow: 0 0 40px rgba(58, 242, 255, 0.2);
+    box-shadow: 0 0 calc(var(--gu) * 2.5) rgba(58, 242, 255, 0.2);
 }
 
 .stripes-bg {
@@ -152,7 +152,7 @@ function submit() {
 }
 
 .modal-header {
-    padding: 32px 40px 10px;
+    padding: var(--space-6) calc(var(--gu) * 2.5) calc(var(--gu) * 0.625);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -160,22 +160,22 @@ function submit() {
     z-index: 1;
 
     .title {
-        color: #3AF2FF;
+        color: var(--color-accent-cyan);
         font-family: var(--font-display);
-        font-size: 2.2rem;
+        font-size: calc(var(--gu) * 2);
         font-weight: 800;
         margin: 0;
-        letter-spacing: -0.5px;
+        letter-spacing: calc(var(--gu) * -0.03);
     }
 
     .close-icon-btn {
         background: rgba(255, 255, 255, 0.05);
         color: var(--color-text-muted);
         border: none;
-        width: 36px;
-        height: 36px;
-        border-radius: 8px;
-        font-size: 1.5rem;
+        width: calc(var(--gu) * 2.25);
+        height: calc(var(--gu) * 2.25);
+        border-radius: var(--radius-sm);
+        font-size: calc(var(--gu) * 1.5);
         cursor: pointer;
         display: flex;
         align-items: center;
@@ -189,10 +189,10 @@ function submit() {
 }
 
 .modal-body {
-    padding: 20px 40px;
+    padding: calc(var(--gu) * 1.25) calc(var(--gu) * 2.5);
     display: flex;
     flex-direction: column;
-    gap: 32px;
+    gap: var(--space-6);
     position: relative;
     z-index: 1;
 }
@@ -200,13 +200,13 @@ function submit() {
 .form-section {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: var(--space-3);
 
     label {
-        font-size: 0.95rem;
+        font-size: var(--fontSize-sm);
         font-weight: 700;
         color: white;
-        letter-spacing: 0.5px;
+        letter-spacing: calc(var(--gu) * 0.03);
     }
 
     .section-header {
@@ -216,16 +216,16 @@ function submit() {
     }
 
     .char-count {
-        font-size: 0.75rem;
+        font-size: var(--fontSize-xs);
         color: var(--color-text-muted);
     }
 }
 
 .input-wrapper {
     background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    padding: 2px;
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-md);
+    padding: calc(var(--gu) * 0.125);
     transition: all 0.3s;
     
     &:focus-within {
@@ -237,9 +237,9 @@ function submit() {
         width: 100%;
         background: transparent;
         border: none;
-        padding: 14px 18px;
+        padding: calc(var(--gu) * 0.875) calc(var(--gu) * 1.125);
         color: white;
-        font-size: 1rem;
+        font-size: var(--fontSize-md);
         &::placeholder {
             color: rgba(255, 255, 255, 0.2);
         }
@@ -249,18 +249,18 @@ function submit() {
 
 .mode-toggle-group {
     display: flex;
-    gap: 16px;
+    gap: var(--space-4);
 
     .mode-btn {
         flex: 1;
         background: rgba(20, 18, 30, 0.6);
-        border: 2px solid rgba(255, 255, 255, 0.08);
-        color: #B8C4E3;
-        padding: 16px;
-        border-radius: 14px;
+        border: calc(var(--gu) * 0.125) solid rgba(255, 255, 255, 0.08);
+        color: var(--color-text-secondary);
+        padding: var(--gu);
+        border-radius: var(--radius-md);
         font-family: var(--font-display);
         font-weight: 700;
-        font-size: 1.1rem;
+        font-size: var(--fontSize-lg);
         cursor: pointer;
         transition: all 0.3s;
 
@@ -268,14 +268,14 @@ function submit() {
             border-color: var(--color-accent-magenta);
             color: var(--color-accent-magenta);
             background: rgba(255, 79, 216, 0.05);
-            box-shadow: inset 0 0 15px rgba(255, 79, 216, 0.1);
+            box-shadow: inset 0 0 calc(var(--gu) * 1) rgba(255, 79, 216, 0.1);
         }
 
         &.normal.active {
             border-color: var(--color-accent-yellow);
             color: var(--color-accent-yellow);
             background: rgba(255, 210, 72, 0.05);
-            box-shadow: inset 0 0 15px rgba(255, 210, 72, 0.1);
+            box-shadow: inset 0 0 calc(var(--gu) * 1) rgba(255, 210, 72, 0.1);
         }
 
         &:hover:not(.active) {
@@ -288,40 +288,40 @@ function submit() {
 .pill-group {
     display: flex;
     justify-content: center;
-    gap: 12px;
+    gap: var(--space-3);
 
     .pill-btn {
         background: rgba(58, 242, 255, 0.05);
         border: 1px solid rgba(58, 242, 255, 0.3);
-        color: #3AF2FF;
-        padding: 6px 16px;
-        border-radius: 8px;
+        color: var(--color-accent-cyan);
+        padding: calc(var(--gu) * 0.375) var(--gu);
+        border-radius: var(--radius-sm);
         font-weight: 800;
-        font-size: 0.85rem;
+        font-size: var(--fontSize-xs);
         cursor: pointer;
         transition: all 0.2s;
 
         &.active {
-            background: #FFD248;
-            border-color: #FFD248;
+            background: var(--color-accent-yellow);
+            border-color: var(--color-accent-yellow);
             color: black;
-            box-shadow: 0 0 15px rgba(255, 210, 72, 0.4);
+            box-shadow: 0 0 calc(var(--gu) * 1) rgba(255, 210, 72, 0.4);
         }
     }
 }
 
 .progress-track {
-    height: 12px;
+    height: calc(var(--gu) * 0.75);
     background: rgba(58, 242, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 10px;
-    margin-top: 8px;
+    border-radius: var(--radius-md);
+    margin-top: calc(var(--gu) * 0.5);
     overflow: hidden;
     position: relative;
 
     .progress-fill {
         height: 100%;
-        background: linear-gradient(90deg, #FFD248, #2AB6C1);
+        background: linear-gradient(90deg, var(--color-accent-yellow), #2AB6C1);
         transition: width 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 }
@@ -329,23 +329,23 @@ function submit() {
 .lang-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
+    gap: var(--space-3);
 
     .lang-btn {
         background: rgba(255, 255, 255, 0.02);
         border: 1px solid rgba(255, 255, 255, 0.08);
         color: var(--color-text-secondary);
-        padding: 14px;
-        border-radius: 12px;
+        padding: var(--gu) calc(var(--gu) * 0.875);
+        border-radius: var(--radius-md);
         font-weight: 600;
         cursor: pointer;
         transition: all 0.2s;
 
         &.active {
-            border-color: #3AF2FF;
-            color: #3AF2FF;
+            border-color: var(--color-accent-cyan);
+            color: var(--color-accent-cyan);
             background: rgba(58, 242, 255, 0.05);
-            box-shadow: 0 0 15px rgba(58, 242, 255, 0.1);
+            box-shadow: 0 0 calc(var(--gu) * 1) rgba(58, 242, 255, 0.1);
         }
 
         &:hover:not(.active) {
@@ -356,40 +356,40 @@ function submit() {
 }
 
 .modal-footer {
-    padding: 10px 40px 40px;
+    padding: calc(var(--gu) * 0.625) calc(var(--gu) * 2.5) calc(var(--gu) * 2.5);
     display: flex;
-    gap: 16px;
+    gap: var(--space-4);
     position: relative;
     z-index: 1;
 
     .btn-footer {
         flex: 1;
-        padding: 16px;
-        border-radius: 12px;
+        padding: var(--gu);
+        border-radius: var(--radius-md);
         font-family: var(--font-display);
         font-weight: 800;
-        font-size: 1rem;
+        font-size: var(--fontSize-md);
         text-transform: uppercase;
         cursor: pointer;
         transition: all 0.3s;
         
         &.cancel {
             background: transparent;
-            border: 2px solid #3AF2FF;
-            color: #3AF2FF;
+            border: calc(var(--gu) * 0.125) solid var(--color-accent-cyan);
+            color: var(--color-accent-cyan);
             &:hover {
                 background: rgba(58, 242, 255, 0.1);
-                box-shadow: 0 0 15px rgba(58, 242, 255, 0.2);
+                box-shadow: 0 0 calc(var(--gu) * 1) rgba(58, 242, 255, 0.2);
             }
         }
 
         &.create {
             background: rgba(255, 210, 72, 0.1);
-            border: 2px solid #FFD248;
-            color: #FFD248;
+            border: calc(var(--gu) * 0.125) solid var(--color-accent-yellow);
+            color: var(--color-accent-yellow);
             &:hover:not(:disabled) {
                 background: rgba(255, 210, 72, 0.2);
-                box-shadow: 0 0 20px rgba(255, 210, 72, 0.3);
+                box-shadow: 0 0 calc(var(--gu) * 1.25) rgba(255, 210, 72, 0.3);
             }
             &:disabled {
                 opacity: 0.3;

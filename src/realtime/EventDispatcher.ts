@@ -3,7 +3,7 @@ import { useChatStore } from '@/stores/useChatStore';
 import { useRoomStore } from '@/stores/useRoomStore';
 import { useGameStore } from '@/stores/useGameStore';
 import { useServerClock } from '@/shared/composables/useServerClock';
-import type { StompEventEnvelope } from '@/shared/types/realtime.types';
+import type { StompEventEnvelope, CommandMeta } from '@/shared/types/realtime.types';
 import type { ChatSendPayload } from '@/api/dtos/chat.dto';
 import type {
     GameStageChangedEvent,
@@ -13,6 +13,13 @@ import type {
     GameSpellPurchasedEvent,
     GameFinishedEvent,
     Inventory,
+    TypingUpdatePayload,
+    ItemUsePayload,
+    SpellUsePayload,
+    ItemEffectAppliedEvent,
+    SpellEffectAppliedEvent,
+    ItemEffectBlockedEvent,
+    EffectRemovedEvent,
 } from '@/api/dtos/game.dto';
 
 function asEnvelope(payload: unknown): StompEventEnvelope {
@@ -28,6 +35,16 @@ function feedServerTime(envelope: StompEventEnvelope): void {
         const serverClock = useServerClock();
         serverClock.feedSample(envelope.meta.serverTime);
     }
+}
+
+/**
+ * Generate CommandMeta for STOMP commands (CONVENTIONS.md § 3.2)
+ */
+function generateCommandMeta(): CommandMeta {
+    return {
+        commandId: `cmd_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        clientTime: new Date().toISOString(),
+    };
 }
 
 /**
@@ -115,12 +132,18 @@ export class EventDispatcher {
     static async subscribeToRoom(roomId: string, onEvent?: (type: string, data: unknown) => void) {
         this.roomCallback = onEvent || null;
 
+        console.log('[EventDispatcher] subscribeToRoom called with roomId:', roomId);
+        console.log('[EventDispatcher] Subscribing to:', `/topic/rooms/${roomId}/chat`);
+        console.log('[EventDispatcher] Subscribing to:', `/topic/rooms/${roomId}/lobby`);
+
         await stompClient.subscribe(`/topic/rooms/${roomId}/chat`, (raw) => {
             const envelope = asEnvelope(raw);
             feedServerTime(envelope);
+            console.log('[EventDispatcher] Received room chat:', envelope);
             if (envelope.type === 'CHAT_MESSAGE') {
                 const chatStore = useChatStore();
                 const data = envelope.data as { message: string; sender: { nickname: string } };
+                console.log('[EventDispatcher] Processing CHAT_MESSAGE for roomId:', roomId, 'data:', data);
                 chatStore.receiveMessage(roomId, data.message, data.sender.nickname);
             }
         });
@@ -171,6 +194,18 @@ export class EventDispatcher {
                 case 'GAME_FINISHED':
                     gameStore.handleGameFinished(envelope.data as GameFinishedEvent);
                     break;
+                case 'ITEM_EFFECT_APPLIED':
+                    gameStore.handleItemEffectApplied(envelope.data as ItemEffectAppliedEvent);
+                    break;
+                case 'SPELL_EFFECT_APPLIED':
+                    gameStore.handleSpellEffectApplied(envelope.data as SpellEffectAppliedEvent);
+                    break;
+                case 'ITEM_EFFECT_BLOCKED':
+                    gameStore.handleItemEffectBlocked(envelope.data as ItemEffectBlockedEvent);
+                    break;
+                case 'EFFECT_REMOVED':
+                    gameStore.handleEffectRemoved(envelope.data as EffectRemovedEvent);
+                    break;
             }
         });
     }
@@ -184,6 +219,7 @@ export class EventDispatcher {
 
     /**
      * Send a chat message via WebSocket.
+     * COMMANDS.md § 2.1
      */
     static sendChatMessage(channelId: string, content: string) {
         const isGlobal = channelId === 'global';
@@ -191,12 +227,73 @@ export class EventDispatcher {
             type: 'CHAT_SEND',
             data: {
                 channelType: isGlobal ? 'GLOBAL' : 'INGAME',
-                roomId: isGlobal ? null : channelId.replace('room-', ''),
+                roomId: isGlobal ? null : channelId,
                 message: content,
                 clientMessageId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
             },
+            meta: generateCommandMeta(),
         };
 
+        console.log('[EventDispatcher] Sending CHAT_SEND:', {
+            channelId,
+            isGlobal,
+            payload,
+        });
         stompClient.send('/app/chat.send', payload);
+    }
+
+    /**
+     * Send typing status update.
+     * COMMANDS.md § 2.2
+     * Destination: /app/rooms/{roomId}/typing
+     */
+    static sendTypingUpdate(roomId: string, isTyping: boolean) {
+        const payload: TypingUpdatePayload = {
+            type: 'TYPING_UPDATE',
+            data: {
+                isTyping,
+            },
+            meta: generateCommandMeta(),
+        };
+
+        console.log('[EventDispatcher] Sending TYPING_UPDATE:', payload);
+        stompClient.send(`/app/rooms/${roomId}/typing`, payload);
+    }
+
+    /**
+     * Use an item in game.
+     * COMMANDS.md § 2.3
+     * Destination: /app/games/{gameId}/items.use
+     */
+    static sendItemUse(gameId: string, itemId: string, targetUserId: string) {
+        const payload: ItemUsePayload = {
+            type: 'ITEM_USE',
+            data: {
+                itemId,
+                targetUserId,
+            },
+            meta: generateCommandMeta(),
+        };
+
+        console.log('[EventDispatcher] Sending ITEM_USE:', payload);
+        stompClient.send(`/app/games/${gameId}/items.use`, payload);
+    }
+
+    /**
+     * Use a spell in game.
+     * COMMANDS.md § 2.4
+     * Destination: /app/games/{gameId}/spells.use
+     */
+    static sendSpellUse(gameId: string, spellId: string) {
+        const payload: SpellUsePayload = {
+            type: 'SPELL_USE',
+            data: {
+                spellId,
+            },
+            meta: generateCommandMeta(),
+        };
+
+        console.log('[EventDispatcher] Sending SPELL_USE:', payload);
+        stompClient.send(`/app/games/${gameId}/spells.use`, payload);
     }
 }

@@ -14,6 +14,21 @@ export interface StompEventEnvelope {
 }
 
 /**
+ * STOMP Command Envelope (CONVENTIONS.md 3.2절)
+ * 모든 클라이언트→서버 명령의 공통 구조
+ */
+export interface CommandMeta {
+    commandId: string;
+    clientTime: string;
+}
+
+export interface CommandEnvelope<T = unknown> {
+    type: string;
+    data: T;
+    meta: CommandMeta;
+}
+
+/**
  * TIME_SYNC 이벤트 data (EVENTS.md 2.1절)
  * Topic: /user/queue/time
  */

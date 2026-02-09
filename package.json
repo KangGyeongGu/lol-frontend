@@ -11,6 +11,7 @@
   "dependencies": {
     "@stomp/stompjs": "^7.3.0",
     "axios": "^1.7.9",
+    "monaco-editor": "^0.55.1",
     "pinia": "^3.0.4",
     "sockjs-client": "^1.6.1",
     "vue": "^3.5.24",
@@ -24,6 +25,7 @@
     "sass-embedded": "^1.97.3",
     "typescript": "~5.9.3",
     "vite": "^7.2.4",
+    "vite-plugin-monaco-editor": "^1.1.0",
     "vue-tsc": "^3.1.4"
   }
 }

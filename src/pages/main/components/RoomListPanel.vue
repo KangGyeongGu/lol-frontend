@@ -288,6 +288,7 @@ async function handleJoinRoom(roomId: string) {
         font-size: calc(var(--gu) * 3);
         background: linear-gradient(135deg, #3AF2FF 0%, #FF4FD8 100%);
         -webkit-background-clip: text;
+        background-clip: text;
         -webkit-text-fill-color: transparent;
         text-shadow: 0 0 calc(var(--gu) * 1.875) rgba(58, 242, 255, 0.2);
         letter-spacing: calc(var(--gu) * -0.06);
@@ -299,12 +300,12 @@ async function handleJoinRoom(roomId: string) {
     background: rgba(18, 16, 30, 0.4);
     border: calc(var(--gu) * 0.0625) solid rgba(255, 255, 255, 0.08);
     border-radius: calc(var(--gu) * 1.25);
-    padding: var(--space-4) var(--space-6);
+    padding: calc(var(--gu) * 0.75) var(--space-6);
     display: flex;
     justify-content: space-between;
     align-items: center;
     backdrop-filter: blur(20px);
-    margin-bottom: var(--space-4);
+    margin-bottom: var(--space-3);
     box-shadow: 0 calc(var(--gu) * 0.5) calc(var(--gu) * 2) rgba(0, 0, 0, 0.4), inset 0 calc(var(--gu) * 0.0625) calc(var(--gu) * 0.0625) rgba(255, 255, 255, 0.05);
     z-index: 100;
 
@@ -530,7 +531,7 @@ async function handleJoinRoom(roomId: string) {
     justify-content: center;
     align-items: center;
     position: relative;
-    padding: var(--space-4) 0;
+    padding: var(--space-2) 0;
 
     .page-indicator {
         display: flex;
@@ -573,7 +574,11 @@ async function handleJoinRoom(roomId: string) {
 }
 
 .room-grid-area {
-    flex: 1; overflow: hidden; display: flex; flex-direction: column;
+    flex: 1;
+    min-height: 0; 
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
     position: relative;
 
     .error-message-fixed {

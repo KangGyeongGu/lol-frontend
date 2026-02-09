@@ -6,6 +6,7 @@ import { useRoomStore } from '@/stores/useRoomStore';
 import { MESSAGES } from '@/shared/constants/messages';
 import HubPanel from './components/HubPanel.vue';
 import RoomListPanel from './components/RoomListPanel.vue';
+import MyPagePanel from './components/MyPagePanel.vue';
 import CreateRoomModal from '@/widgets/CreateRoomModal.vue';
 import BaseButton from '@/shared/ui/BaseButton.vue';
 import type { CreateRoomRequest } from '@/api/dtos/room.dto';
@@ -16,7 +17,7 @@ const router = useRouter();
 const authStore = useAuthStore();
 const roomStore = useRoomStore();
 
-type ViewMode = 'HUB' | 'ROOM_LIST';
+type ViewMode = 'HUB' | 'ROOM_LIST' | 'MY_PAGE';
 const viewMode = ref<ViewMode>((sessionStorage.getItem('mainViewMode') as ViewMode) || 'HUB');
 const showCreateModal = ref(false);
 
@@ -58,22 +59,26 @@ function switchView(mode: ViewMode) {
         <div class="user-menu" v-if="authStore.user">
             <span class="nickname">{{ authStore.user.nickname }}</span>
             <span class="tier">{{ authStore.user.tier }}</span>
-            <BaseButton variant="neutral" size="sm" @click="router.push({ name: 'MY_PAGE' })">{{ MESSAGES.COMMON.MYPAGE }}</BaseButton>
+            <BaseButton variant="neutral" size="sm" @click="switchView('MY_PAGE')">{{ MESSAGES.COMMON.MYPAGE }}</BaseButton>
             <BaseButton variant="danger" size="sm" @click="handleLogout">{{ MESSAGES.COMMON.LOGOUT }}</BaseButton>
         </div>
     </header>
     
     <main class="content-area">
         <Transition name="fade" mode="out-in">
-            <HubPanel 
-                v-if="viewMode === 'HUB'" 
+            <HubPanel
+                v-if="viewMode === 'HUB'"
                 @navigate="switchView"
                 @create="showCreateModal = true"
             />
-            <RoomListPanel 
-                v-else-if="viewMode === 'ROOM_LIST'" 
+            <RoomListPanel
+                v-else-if="viewMode === 'ROOM_LIST'"
                 @navigate="switchView"
                 @create="showCreateModal = true"
+            />
+            <MyPagePanel
+                v-else-if="viewMode === 'MY_PAGE'"
+                @navigate="switchView"
             />
         </Transition>
     </main>

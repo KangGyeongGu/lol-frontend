@@ -24,7 +24,10 @@ function updateBestOffset(): void {
     // 중앙값 사용 (이상치 필터링)
     const sorted = [...samples.value].sort((a, b) => a.offset - b.offset);
     const medianIndex = Math.floor(sorted.length / 2);
-    currentOffset.value = sorted[medianIndex].offset;
+    const median = sorted[medianIndex];
+    if (median) {
+        currentOffset.value = median.offset;
+    }
 }
 
 function feedSample(serverTimeIso: string): void {

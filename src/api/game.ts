@@ -4,6 +4,7 @@ import type {
     BanPickRequest,
     ShopItemRequest,
     ShopSpellRequest,
+    SubmissionRequest,
 } from '@/api/dtos/game.dto';
 
 export const gameApi = {
@@ -40,5 +41,13 @@ export const gameApi = {
      */
     purchaseSpell: (gameId: string, req: ShopSpellRequest) => {
         return apiClient.post<ShopSpellRequest, GameState>(`/games/${gameId}/shop/spells`, req);
+    },
+
+    /**
+     * 코드 제출
+     * POST /games/{gameId}/submissions
+     */
+    submitCode: (gameId: string, req: SubmissionRequest) => {
+        return apiClient.post<SubmissionRequest, GameState>(`/games/${gameId}/submissions`, req);
     },
 };

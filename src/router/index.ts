@@ -4,7 +4,6 @@ import { useAuthStore } from '@/stores/useAuthStore';
 const LoginPage = () => import('@/pages/auth/LoginPage.vue');
 const SignupPage = () => import('@/pages/auth/SignupPage.vue');
 const MainPage = () => import('@/pages/main/MainPage.vue');
-const MyPage = () => import('@/pages/user/MyPage.vue');
 const WaitingRoomPage = () => import('@/pages/room/WaitingRoomPage.vue');
 
 const routes: RouteRecordRaw[] = [
@@ -27,12 +26,6 @@ const routes: RouteRecordRaw[] = [
         meta: { authRequired: true }
     },
     {
-        path: '/mypage',
-        name: 'MY_PAGE',
-        component: MyPage,
-        meta: { authRequired: true }
-    },
-    {
         path: '/room/:roomId',
         name: 'WAITING_ROOM',
         component: WaitingRoomPage,
@@ -44,6 +37,18 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/pages/match/BanPickShopPage.vue'),
         meta: { authRequired: true }
     },
+    {
+        path: '/match/:roomId/:gameId/play',
+        name: 'IN_GAME',
+        component: () => import('@/pages/match/InGamePage.vue'),
+        meta: { authRequired: true }
+    },
+    {
+        path: '/match/:roomId/:gameId/result',
+        name: 'MATCH_RESULT',
+        component: () => import('@/pages/match/MatchResultPage.vue'),
+        meta: { authRequired: true }
+    },
 ];
 
 if (import.meta.env.DEV) {
@@ -51,6 +56,12 @@ if (import.meta.env.DEV) {
         path: '/dev/ban-pick-shop/:roomId?/:gameId?',
         name: 'DEV_BAN_PICK_SHOP',
         component: () => import('@/pages/match/BanPickShopPage.vue'),
+        meta: { public: true }
+    });
+    routes.push({
+        path: '/dev/in-game/:roomId?/:gameId?',
+        name: 'DEV_IN_GAME',
+        component: () => import('@/pages/match/InGamePage.vue'),
         meta: { public: true }
     });
 }

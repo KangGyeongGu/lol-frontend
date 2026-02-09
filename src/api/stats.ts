@@ -1,5 +1,10 @@
 import { apiClient } from '@/api/core';
-import type { ListOfPlayerRankings, ListOfAlgorithmPickBanRates } from '@/api/dtos/stats.dto';
+import type {
+    ListOfPlayerRankings,
+    ListOfAlgorithmPickBanRates,
+    UserStats,
+    PagedMatchList
+} from '@/api/dtos/stats.dto';
 
 export const statsApi = {
     /**
@@ -14,5 +19,22 @@ export const statsApi = {
      */
     getAlgorithmPickBanRates: () => {
         return apiClient.get<void, ListOfAlgorithmPickBanRates>('/stats/realtime/algorithm-pick-ban-rates');
+    },
+
+    /**
+     * 내 통계 조회
+     * GET /users/me/stats
+     */
+    getMyStats: () => {
+        return apiClient.get<void, UserStats>('/users/me/stats');
+    },
+
+    /**
+     * 내 매치 히스토리 조회 (커서 기반 페이지네이션)
+     * GET /users/me/matches
+     * OPENAPI.yaml.md line 835-884
+     */
+    getMyMatches: (params?: { cursor?: string; limit?: number }) => {
+        return apiClient.get<void, PagedMatchList>('/users/me/matches', { params });
     }
 };

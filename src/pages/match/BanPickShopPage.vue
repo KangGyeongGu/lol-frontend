@@ -105,9 +105,10 @@ async function handlePick(algorithmId: string) {
 
 // --- PLAY 단계 전환 감지 ---
 watch(() => gameStore.stage, (newStage) => {
-    if (newStage === 'PLAY' || newStage === 'FINISHED') {
-        router.push({ name: 'WAITING_ROOM', params: { roomId } });
+    if (newStage === 'PLAY') {
+        router.push({ name: 'IN_GAME', params: { roomId, gameId } });
     }
+    // FINISHED 단계는 GAME_FINISHED 이벤트로 별도 처리 (RESULT 표시)
 });
 
 // --- Lifecycle ---
@@ -152,7 +153,19 @@ onUnmounted(() => {
             <main class="main-layout">
                 <!-- Column 1: Sidebar -->
                 <aside class="sidebar-column">
-                    <MatchPlayerSlot :player="gameStore.gameState?.players?.length ? null : null" />
+                    <div class="player-slots">
+                        <MatchPlayerSlot
+                            v-for="player in gameStore.gameState?.players || []"
+                            :key="player.userId"
+                            :player="player"
+                        />
+                        <!-- 빈 슬롯 표시 (최대 인원 수만큼) -->
+                        <MatchPlayerSlot
+                            v-for="emptyIndex in Math.max(0, 2 - (gameStore.gameState?.players?.length || 0))"
+                            :key="`empty-${emptyIndex}`"
+                            :player="null"
+                        />
+                    </div>
                     <div class="chat-wrapper">
                         <ChatPanel
                             :channel-id="`room-${roomId}`"
@@ -227,19 +240,19 @@ onUnmounted(() => {
     z-index: 2;
     width: 100%;
     height: 100%;
-    max-width: calc(var(--gu) * 160);
-    max-height: calc(var(--gu) * 90);
+    max-width: calc(var(--gu) * 100);
+    max-height: calc(var(--gu) * 56.25);
     aspect-ratio: 16 / 9;
     display: flex;
     flex-direction: column;
-    padding: calc(var(--gu) * 2) calc(var(--gu) * 4);
-    gap: calc(var(--gu) * 2);
+    padding: calc(var(--gu) * 1.25) calc(var(--gu) * 2.5);
+    gap: calc(var(--gu) * 1.25);
     box-sizing: border-box;
 }
 
 .phase-navigator {
     display: flex;
-    height: calc(var(--gu) * 5);
+    height: calc(var(--gu) * 3.125);
     width: 100%;
     background: rgba(18, 16, 30, 0.8);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -334,16 +347,22 @@ onUnmounted(() => {
 .main-layout {
     flex: 1;
     display: grid;
-    grid-template-columns: calc(var(--gu) * 28) 1fr;
-    gap: calc(var(--gu) * 2);
+    grid-template-columns: calc(var(--gu) * 17.5) 1fr;
+    gap: calc(var(--gu) * 1.25);
     min-height: 0;
 }
 
 .sidebar-column {
     display: flex;
     flex-direction: column;
-    gap: calc(var(--gu) * 2);
+    gap: calc(var(--gu) * 1.25);
     min-height: 0;
+}
+
+.player-slots {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--gu) * 0.625);
 }
 
 .chat-wrapper {
@@ -362,9 +381,9 @@ onUnmounted(() => {
 
 .phase-content-wrapper {
     width: 100%;
-    max-width: calc(var(--gu) * 110);
+    max-width: calc(var(--gu) * 68.75);
     height: 100%;
-    padding: calc(var(--gu) * 2.5);
+    padding: calc(var(--gu) * 1.5625);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: var(--radius-sm);
     background: rgba(18, 16, 30, 0.6);

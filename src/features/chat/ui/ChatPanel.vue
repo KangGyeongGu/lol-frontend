@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, nextTick, computed, watch } from 'vue';
 import { useChatStore } from '@/stores/useChatStore';
+import { MESSAGES } from '@/shared/constants/messages';
 import BaseButton from '@/shared/ui/BaseButton.vue';
 
 interface Props {
@@ -13,11 +14,15 @@ const chatStore = useChatStore();
 const newMessage = ref('');
 const messagesContainer = ref<HTMLElement | null>(null);
 
-console.log('[ChatPanel] Initialized with channelId:', props.channelId);
+if (import.meta.env.DEV) {
+  console.log('[ChatPanel] Initialized with channelId:', props.channelId);
+}
 
 const currentMessages = computed(() => {
   const messages = chatStore.getMessages(props.channelId);
-  console.log('[ChatPanel] currentMessages computed for channelId:', props.channelId, 'count:', messages.length);
+  if (import.meta.env.DEV) {
+    console.log('[ChatPanel] currentMessages computed for channelId:', props.channelId, 'count:', messages.length);
+  }
   return messages;
 });
 
@@ -28,10 +33,12 @@ watch(currentMessages, () => {
 
 function handleSend() {
   if (!newMessage.value.trim()) return;
-  console.log('[ChatPanel] handleSend called:', {
-    channelId: props.channelId,
-    message: newMessage.value,
-  });
+  if (import.meta.env.DEV) {
+    console.log('[ChatPanel] handleSend called:', {
+      channelId: props.channelId,
+      message: newMessage.value,
+    });
+  }
   chatStore.publishMessage(props.channelId, newMessage.value);
   newMessage.value = '';
   scrollToBottom();
@@ -65,14 +72,14 @@ onMounted(() => {
     </div>
     
     <div class="chat-input-area">
-      <input 
-        v-model="newMessage" 
-        type="text" 
-        placeholder="Type a message..." 
+      <input
+        v-model="newMessage"
+        type="text"
+        :placeholder="MESSAGES.CHAT.INPUT_PLACEHOLDER"
         @keyup.enter="handleSend"
       />
       <BaseButton variant="outline" size="sm" @click="handleSend">
-        SEND
+        {{ MESSAGES.CHAT.SEND }}
       </BaseButton>
     </div>
   </div>

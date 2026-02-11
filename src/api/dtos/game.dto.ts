@@ -110,6 +110,7 @@ export interface GameFinishedResult {
     userId: string;
     nickname: string;
     tier?: string; // 플레이어 티어 (IRON, BRONZE, SILVER, GOLD, etc.)
+    score?: number; // 플레이어 현재 점수 (티어 아이콘 계산용)
     result: 'WIN' | 'LOSE' | 'DRAW';
     rankInGame: number;
     scoreDelta: number;
@@ -126,6 +127,17 @@ export interface GameFinishedEvent {
     roomId: string;
     finishedAt: string;
     results: GameFinishedResult[];
+}
+
+/**
+ * 타이핑 상태 변경 이벤트
+ * EVENTS.md line 288-298
+ */
+export interface TypingStatusChangedEvent {
+    roomId: string;
+    userId: string;
+    isTyping: boolean;
+    updatedAt: string;
 }
 
 /**

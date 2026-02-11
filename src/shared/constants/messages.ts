@@ -17,6 +17,9 @@ export const MESSAGES = {
     READY: '준비 완료',
     READY_CANCEL: '준비 해제',
     START_GAME: '게임 시작',
+    PREV: 'PREV',
+    NEXT: 'NEXT',
+    SEND_BTN: 'SEND',
   },
 
   // 게임 타입/모드 라벨
@@ -49,6 +52,7 @@ export const MESSAGES = {
     IN_GAME: 'IN-GAME',
     TITLE: 'TITLE',
     HOST: 'HOST',
+    RESET_FILTERS: 'Reset Filters',
   },
 
   // 페이지 헤더 및 네비게이션
@@ -56,6 +60,10 @@ export const MESSAGES = {
     BATTLE_ROOMS: 'Battle Rooms',
     CREATE_ROOM: 'Create Room',
     REFRESH_ROOMS: 'Refresh Rooms',
+    PAGE_OF: 'Page',
+    OF: 'of',
+    FOUND: 'Found',
+    MATCHES: 'Matches',
   },
 
   // 빈 상태 메시지
@@ -78,6 +86,7 @@ export const MESSAGES = {
     ROOM_NAME_LABEL: '방 이름',
     ROOM_NAME_PLACEHOLDER: '배틀룸 이름을 입력하세요...',
     PARTICIPANTS_LABEL: '참가 인원',
+    PARTICIPANTS_SUFFIX: '명',
     LANGUAGE_LABEL: '사용 언어',
     CREATE_ROOM_BTN: '배틀룸 생성',
     ROOM_SETTINGS: '방 설정',
@@ -85,6 +94,8 @@ export const MESSAGES = {
     MAX_PLAYERS_LABEL: '최대 인원:',
     TIME_LIMIT_LABEL: '제한 시간:',
     LANGUAGE_SETTING_LABEL: '언어:',
+    SEARCH_BY_TITLE: 'Search by room title...',
+    SEARCH_BY_HOST: 'Search by host name...',
   },
 
   // 매치 관련 메시지 (밴/픽/상점)
@@ -117,6 +128,11 @@ export const MESSAGES = {
     // EditorPanel
     JUDGING: '채점 중',
     EARLY_TERMINATE: '조기종료',
+    SUBMIT_CODE: '코드 제출',
+    DARK_MODE: '다크 모드',
+    LIGHT_MODE: '라이트 모드',
+    FONT_INCREASE: '폰트 확대',
+    FONT_DECREASE: '폰트 축소',
 
     // InventoryPanel
     ITEMS: '아이템',
@@ -141,6 +157,12 @@ export const MESSAGES = {
     MEMORY: '메모리',
     RETRY: '다시 도전하기',
     GO_MAIN: '메인으로 돌아가기',
+  },
+
+  // 채팅 관련 메시지
+  CHAT: {
+    INPUT_PLACEHOLDER: 'Type a message...',
+    SEND: 'SEND',
   },
 
   // 마이페이지 관련 메시지

@@ -1,5 +1,5 @@
 import { apiClient } from '@/api/core';
-import type { LoginRequest, LoginResponse, SignupRequest, SignupResponse, UserProfile } from '@/api/dtos/auth.dto';
+import type { LoginRequest, LoginResponse, SignupRequest, SignupResponse, UserProfile, ActiveGame } from '@/api/dtos/auth.dto';
 
 export const authApi = {
     login: (code: string) => {
@@ -12,6 +12,10 @@ export const authApi = {
 
     getMe: () => {
         return apiClient.get<void, UserProfile>('/users/me');
+    },
+
+    getActiveGame: () => {
+        return apiClient.get<void, ActiveGame | null>('/users/me/active-game');
     },
 
     logout: () => {

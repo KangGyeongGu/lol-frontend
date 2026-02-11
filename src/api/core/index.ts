@@ -51,7 +51,9 @@ apiClient.interceptors.response.use(
         } else if (status === 403) {
             // 403 처리는 호출부에서 catch로 위임
         } else if (status && status >= 500) {
-            console.error(`[API] ${status} Server Error:`, error.message);
+            if (import.meta.env.DEV) {
+                console.error(`[API] ${status} Server Error:`, error.message);
+            }
         }
 
         return Promise.reject(error);

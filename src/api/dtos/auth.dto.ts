@@ -39,3 +39,16 @@ export interface UserProfile {
     exp: number;
     coin: number;
 }
+
+export type GameStage = 'LOBBY' | 'BAN' | 'PICK' | 'SHOP' | 'PLAY' | 'FINISHED';
+export type PageRoute = 'WAITING_ROOM' | 'BAN_PICK_SHOP' | 'IN_GAME';
+export type GameType = 'NORMAL' | 'RANKED';
+
+export interface ActiveGame {
+    gameId: string;
+    roomId: string;
+    stage: GameStage;
+    pageRoute: PageRoute;
+    gameType: GameType;
+    remainingMs?: number;
+}

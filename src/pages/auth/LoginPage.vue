@@ -31,7 +31,9 @@ onMounted(async () => {
         });
       }
     } catch (e) {
-      console.error('Login failed', e);
+      if (import.meta.env.DEV) {
+        console.error('Login failed', e);
+      }
       errorMessage.value = MESSAGES.AUTH.LOGIN_FAILED;
       setTimeout(() => {
         errorMessage.value = null;

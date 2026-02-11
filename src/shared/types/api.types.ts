@@ -6,7 +6,8 @@ export interface ApiError {
 
 export interface SuccessEnvelope<T> {
     data: T;
-    meta?: {
+    meta: {
+        requestId: string;
         serverTime: string;
     };
 }

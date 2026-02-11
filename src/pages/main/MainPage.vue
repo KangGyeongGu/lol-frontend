@@ -36,7 +36,9 @@ async function handleCreateRoom(payload: CreateRoomRequest) {
         showCreateModal.value = false;
         router.push({ name: 'WAITING_ROOM', params: { roomId: roomDetail.roomId } });
     } catch (e) {
-        console.error(e);
+        if (import.meta.env.DEV) {
+            console.error(e);
+        }
     }
 }
 

@@ -54,8 +54,6 @@ export interface RoomDetail {
     language: Language;
     maxPlayers: number;
     players: RoomPlayer[];
-    stage: GameStage;
-    pageRoute: PageRoute;
 }
 
 export interface ActiveGame {

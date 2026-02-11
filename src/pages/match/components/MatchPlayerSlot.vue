@@ -3,7 +3,7 @@ import { computed } from 'vue';
 import { MESSAGES } from '@/shared/constants/messages';
 import type { RoomPlayerViewModel } from '@/entities/room.model';
 import type { GamePlayerViewModel } from '@/entities/game.model';
-import { getTierIconPath } from '@/shared/utils/assetMapper.util';
+import { calculateTierFromScore, getTierIconPath } from '@/shared/utils/assetMapper.util';
 
 interface Props {
   player: RoomPlayerViewModel | GamePlayerViewModel | null;
@@ -38,7 +38,7 @@ const normalizedPlayer = computed(() => {
     <template v-if="normalizedPlayer">
       <div class="player-tier-icon">
         <img
-          :src="getTierIconPath(normalizedPlayer.tier)"
+          :src="getTierIconPath(calculateTierFromScore(normalizedPlayer.score))"
           :alt="normalizedPlayer.tier"
         />
       </div>

@@ -5,7 +5,7 @@ import { useRouter } from 'vue-router';
 import { useGameStore } from '@/stores/useGameStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { MESSAGES } from '@/shared/constants/messages';
-import { getTierIconPath } from '@/shared/utils/assetMapper.util';
+import { calculateTierFromScore, getTierIconPath } from '@/shared/utils/assetMapper.util';
 import bgMainSrc from '@/assets/images/bg-main.jpg';
 import NumberCounter from '@/shared/components/NumberCounter.vue';
 
@@ -23,6 +23,7 @@ const resultData = computed(() => {
         rank: r.rankInGame,
         nickname: r.nickname,
         tier: r.tier || 'IRON',  // 플레이어 티어 (기본값: IRON)
+        score: r.score ?? 0,  // 플레이어 점수 (티어 아이콘 계산용, 기본값: 0)
         points: r.finalScoreValue,
         coinBefore: r.coinBefore,
         coinDelta: r.coinDelta,
@@ -163,7 +164,7 @@ function handleGoMain() {
 
                     <div class="profile-area">
                         <div class="tier-icon-box">
-                            <img :src="getTierIconPath(player.tier)" :alt="player.tier" />
+                            <img :src="getTierIconPath(calculateTierFromScore(player.score))" :alt="player.tier" />
                             <div v-if="player.solved" class="check-mark">✓</div>
                         </div>
                         <div class="user-info">

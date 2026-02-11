@@ -74,14 +74,14 @@ function submit() {
             <div class="form-section">
                 <label>{{ MESSAGES.ROOM.PARTICIPANTS_LABEL }}</label>
                 <div class="pill-group">
-                    <button 
-                        v-for="count in participantOptions" 
+                    <button
+                        v-for="count in participantOptions"
                         :key="count"
                         class="pill-btn"
                         :class="{ active: maxPlayers === count }"
                         @click="maxPlayers = count"
                     >
-                        {{ count }}명
+                        {{ count }}{{ MESSAGES.ROOM.PARTICIPANTS_SUFFIX }}
                     </button>
                 </div>
                 <div class="progress-track">

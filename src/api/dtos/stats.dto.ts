@@ -35,15 +35,14 @@ export interface ListOfAlgorithmPickBanRates {
 
 /**
  * 유저 통계 정보
+ * OPENAPI.yaml.md line 172-186
  */
 export interface UserStats {
-    totalGames: number;      // 총 게임 수
-    totalWin: number;        // 총 승리 수
-    totalLose: number;       // 총 패배 수
-    totalDraw: number;       // 총 무승부 수
-    avgRank: number;         // 평균 순위
-    winRate: number;         // 승률 (0-100)
-    solvedRate: number;      // 문제 해결률 (0-100)
+    games: number;    // 총 게임 수
+    wins: number;     // 총 승리 수
+    losses: number;   // 총 패배 수
+    draws: number;    // 총 무승부 수
+    winRate: number;  // 승률 (0-100)
 }
 
 /**

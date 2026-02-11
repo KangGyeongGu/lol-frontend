@@ -37,7 +37,9 @@ async function handleSignup() {
         await authStore.signup(payload);
         router.replace({ name: 'MAIN' });
     } catch (e) {
-        console.error(e);
+        if (import.meta.env.DEV) {
+            console.error(e);
+        }
         errorMessage.value = MESSAGES.AUTH.SIGNUP_FAILED;
         setTimeout(() => {
             errorMessage.value = null;

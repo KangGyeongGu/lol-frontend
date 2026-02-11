@@ -41,8 +41,6 @@ export interface RoomDetailViewModel {
     language: Language;
     maxPlayers: number;
     players: RoomPlayerViewModel[];
-    stage: GameStage;
-    pageRoute: PageRoute;
 }
 
 // DTO → ViewModel 변환 함수
@@ -65,9 +63,7 @@ export function toRoomDetailViewModel(dto: RoomDetail): RoomDetailViewModel {
         gameType: dto.gameType,
         language: dto.language,
         maxPlayers: dto.maxPlayers,
-        players: dto.players.map(toRoomPlayerViewModel),
-        stage: dto.stage,
-        pageRoute: dto.pageRoute
+        players: dto.players.map(toRoomPlayerViewModel)
     };
 }
 

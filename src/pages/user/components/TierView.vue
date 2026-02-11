@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { MESSAGES } from '@/shared/constants/messages';
-import { getTierIconPath } from '@/shared/utils/assetMapper.util';
+import { calculateTierFromScore, getTierIconPath } from '@/shared/utils/assetMapper.util';
 
 interface Activity {
   date: string;
@@ -10,6 +10,7 @@ interface Activity {
 
 interface Props {
   tier: string;
+  score: number;
   nextTierProgress: number;
   winRate: number;
   solvedRate: number;
@@ -20,7 +21,7 @@ const props = withDefaults(defineProps<Props>(), {
   activities: () => []
 });
 
-const tierIconPath = computed(() => getTierIconPath(props.tier));
+const tierIconPath = computed(() => getTierIconPath(calculateTierFromScore(props.score)));
 </script>
 
 <template>

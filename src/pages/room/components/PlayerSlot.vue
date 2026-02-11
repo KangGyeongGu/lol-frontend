@@ -2,7 +2,7 @@
 import { MESSAGES } from '@/shared/constants/messages';
 import type { RoomPlayerViewModel } from '@/entities/room.model';
 import BaseBadge from '@/shared/ui/BaseBadge.vue';
-import { getTierIconPath } from '@/shared/utils/assetMapper.util';
+import { calculateTierFromScore, getTierIconPath } from '@/shared/utils/assetMapper.util';
 
 interface Props {
   player: RoomPlayerViewModel | null;
@@ -27,7 +27,7 @@ defineProps<Props>();
           <span class="nickname">{{ player.user.nickname }}</span>
         </div>
         <div class="tier-info">
-          <img :src="getTierIconPath(player.user.tier)" :alt="player.user.tier" class="tier-icon" />
+          <img :src="getTierIconPath(calculateTierFromScore(player.user.score))" :alt="player.user.tier" class="tier-icon" />
           <span class="tier-name">{{ player.user.tier }}</span>
           <span class="score-badge">{{ player.user.score }}</span>
         </div>

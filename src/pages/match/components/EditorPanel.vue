@@ -2,6 +2,7 @@
 // EditorPanel.vue: 코드 에디터 패널 (Monaco Editor 통합)
 import { ref, shallowRef, onMounted, onUnmounted, nextTick } from 'vue';
 import * as monaco from 'monaco-editor';
+import { MESSAGES } from '@/shared/constants/messages';
 import ResultDrawer from './ResultDrawer.vue';
 
 interface TestCase {
@@ -190,7 +191,7 @@ onUnmounted(() => {
                     <button
                         class="tool-btn icon-btn"
                         @click="toggleTheme"
-                        :title="isDarkMode ? '라이트 모드' : '다크 모드'"
+                        :title="isDarkMode ? MESSAGES.IN_GAME.LIGHT_MODE : MESSAGES.IN_GAME.DARK_MODE"
                     >
                         <span class="icon">◐</span>
                     </button>
@@ -198,7 +199,7 @@ onUnmounted(() => {
                         class="tool-btn icon-btn"
                         @click="decreaseFontSize"
                         :disabled="fontSize <= MIN_FONT_SIZE"
-                        title="폰트 축소"
+                        :title="MESSAGES.IN_GAME.FONT_DECREASE"
                     >
                         <span class="icon">-</span>
                     </button>
@@ -206,7 +207,7 @@ onUnmounted(() => {
                         class="tool-btn icon-btn"
                         @click="increaseFontSize"
                         :disabled="fontSize >= MAX_FONT_SIZE"
-                        title="폰트 확대"
+                        :title="MESSAGES.IN_GAME.FONT_INCREASE"
                     >
                         <span class="icon">+</span>
                     </button>
@@ -214,19 +215,19 @@ onUnmounted(() => {
             </div>
 
             <div class="right-tools">
-                <button 
+                <button
                     class="action-btn secondary"
                     @click="handleEarlyTerminate"
                 >
-                    조기종료
+                    {{ MESSAGES.IN_GAME.EARLY_TERMINATE }}
                 </button>
-                <button 
+                <button
                     class="action-btn primary"
                     :class="{ grading: isGrading }"
                     :disabled="isGrading"
                     @click="handleSubmit"
                 >
-                    {{ isGrading ? '채점 중' : '코드 제출' }}
+                    {{ isGrading ? MESSAGES.IN_GAME.JUDGING : MESSAGES.IN_GAME.SUBMIT_CODE }}
                 </button>
             </div>
         </header>

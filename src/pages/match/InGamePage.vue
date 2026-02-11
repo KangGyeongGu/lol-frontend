@@ -5,6 +5,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useGameStore } from '@/stores/useGameStore';
 import { useRoomStore } from '@/stores/useRoomStore';
 import { useCatalogStore } from '@/stores/useCatalogStore';
+import { useChatStore } from '@/stores/useChatStore';
 import { useGameSubscription } from './composables/useGameSubscription';
 import { useServerClock } from '@/shared/composables/useServerClock';
 
@@ -20,13 +21,17 @@ const router = useRouter();
 const gameStore = useGameStore();
 const roomStore = useRoomStore();
 const catalogStore = useCatalogStore();
+const chatStore = useChatStore();
 const serverClock = useServerClock();
 
 const roomIdParam = route.params.roomId as string;
 const gameId = route.params.gameId as string;
 
-// --- 실시간 구독 ---
-useGameSubscription(gameId);
+// --- 실시간 구독 (TOPICS.md § 3: IN_GAME subscribes to typing) ---
+useGameSubscription(gameId, { roomId: roomIdParam, enableTyping: true });
+
+// NOTE: 타이핑 상태는 chatStore.getTypingUsers(roomIdParam)로 접근 가능
+// TypingStatusBar 컴포넌트 통합 시 해당 computed를 추가하여 props로 전달
 
 // --- GAME_FINISHED 결과 표시 (WP-6) ---
 const isNavigatingToResult = ref(false);
@@ -80,18 +85,29 @@ async function initPage() {
             const detail = await roomStore.getRoomDetail(roomIdParam);
             roomDetail.value = detail;
         }
+
+        // 플레이어 닉네임 등록 (타이핑 상태 표시를 위해)
+        if (gameStore.gameState?.players) {
+            gameStore.gameState.players.forEach(player => {
+                chatStore.registerNickname(player.userId, player.nickname);
+            });
+        }
     } catch (error) {
-        console.error('[InGamePage] Init error:', error);
+        if (import.meta.env.DEV) {
+            console.error('[InGamePage] Init error:', error);
+        }
     }
 }
 
 // --- gameResult watch: 게임 종료 시 결과 페이지로 전환 (WP-6) ---
 watch(() => gameStore.gameResult, (result) => {
     if (result) {
-        console.log('[InGamePage] Game finished, navigating to result page');
+        if (import.meta.env.DEV) {
+            console.log('[InGamePage] Game finished, navigating to result page');
+        }
         isNavigatingToResult.value = true;
         router.push({
-            name: 'MATCH_RESULT',
+            name: 'RESULT',
             params: { roomId: roomIdParam, gameId }
         });
     }
@@ -112,13 +128,17 @@ onUnmounted(() => {
         gameStore.reset();
     }
     catalogStore.reset();
+    // 타이핑 상태 정리
+    chatStore.clearTypingStatus(roomIdParam);
 });
 
 // --- 코드 제출 핸들러 (WP-8) ---
 async function handleCodeSubmit(code: string, language: string) {
     const gameIdValue = gameStore.gameId;
     if (!gameIdValue) {
-        console.error('[InGamePage] Game ID not found');
+        if (import.meta.env.DEV) {
+            console.error('[InGamePage] Game ID not found');
+        }
         return;
     }
 
@@ -129,10 +149,14 @@ async function handleCodeSubmit(code: string, language: string) {
             language: language as 'JAVA' | 'PYTHON' | 'CPP' | 'JAVASCRIPT',
             sourceCode: code,
         });
-        console.log('[InGamePage] Code submitted successfully');
+        if (import.meta.env.DEV) {
+            console.log('[InGamePage] Code submitted successfully');
+        }
         // TODO: 제출 성공 피드백 표시
     } catch (error) {
-        console.error('[InGamePage] Failed to submit code:', error);
+        if (import.meta.env.DEV) {
+            console.error('[InGamePage] Failed to submit code:', error);
+        }
         // TODO: 에러 피드백 표시
     } finally {
         isSubmitting.value = false;
@@ -143,15 +167,21 @@ async function handleCodeSubmit(code: string, language: string) {
 async function handleEarlyTerminate() {
     const gameId = gameStore.gameId;
     if (!gameId) {
-        console.error('[InGamePage] Game ID not found');
+        if (import.meta.env.DEV) {
+            console.error('[InGamePage] Game ID not found');
+        }
         return;
     }
 
     try {
         // TODO: 실제 API 연동 - gameApi.terminateGame(gameId)
-        console.log('[InGamePage] Early terminate:', { gameId });
+        if (import.meta.env.DEV) {
+            console.log('[InGamePage] Early terminate:', { gameId });
+        }
     } catch (error) {
-        console.error('[InGamePage] Failed to terminate game:', error);
+        if (import.meta.env.DEV) {
+            console.error('[InGamePage] Failed to terminate game:', error);
+        }
     }
 }
 </script>

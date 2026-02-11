@@ -54,9 +54,12 @@ const profileData = computed(() => {
 const statsData = computed(() => ({
     totalGames: statsStore.myStats?.totalGames ?? 0,
     totalWin: statsStore.myStats?.totalWin ?? 0,
-    avgRank: statsStore.myStats?.avgRank ?? 0,
+    totalLose: statsStore.myStats?.totalLose ?? 0,
+    totalDraw: statsStore.myStats?.totalDraw ?? 0,
     winRate: statsStore.myStats?.winRate ?? 0,
-    solvedRate: statsStore.myStats?.solvedRate ?? 0,
+    // avgRank, solvedRate는 OPENAPI spec에 없음 - 임시로 계산
+    avgRank: 0, // TODO: 별도 API 제공 시 사용
+    solvedRate: 0, // TODO: 별도 API 제공 시 사용
 }));
 
 // 계정 정보
@@ -143,6 +146,7 @@ function handleViewResult(matchId: string) {
                             <TierView
                                 v-if="activeSubTab === 'tier'"
                                 :tier="profileData.tier"
+                                :score="profileData.rating"
                                 :next-tier-progress="1"
                                 :win-rate="statsData.winRate"
                                 :solved-rate="statsData.solvedRate"

@@ -24,7 +24,9 @@ export function getItemIconPath(itemId: string): string {
 
   // 유효성 검증: VALID_ITEM_IDS에 없는 ID는 경고 + fallback
   if (!VALID_ITEM_IDS.includes(normalizedId as ValidItemId)) {
-    console.warn(`[assetMapper] Invalid itemId: "${itemId}" (normalized: "${normalizedId}")`);
+    if (import.meta.env.DEV) {
+      console.warn(`[assetMapper] Invalid itemId: "${itemId}" (normalized: "${normalizedId}")`);
+    }
     return '/icons/items/default.png';
   }
 
@@ -50,7 +52,9 @@ export function getSpellIconPath(spellId: string): string {
 
   // 유효성 검증: VALID_SPELL_IDS에 없는 ID는 경고 + fallback
   if (!VALID_SPELL_IDS.includes(normalizedId as ValidSpellId)) {
-    console.warn(`[assetMapper] Invalid spellId: "${spellId}" (normalized: "${normalizedId}")`);
+    if (import.meta.env.DEV) {
+      console.warn(`[assetMapper] Invalid spellId: "${spellId}" (normalized: "${normalizedId}")`);
+    }
     return '/icons/spells/default.png';
   }
 
@@ -76,7 +80,9 @@ export function getTierIconPath(tier: string): string {
 
   // 유효성 검증: VALID_TIERS에 없는 tier는 경고 + fallback
   if (!VALID_TIERS.includes(normalizedTier as ValidTier)) {
-    console.warn(`[assetMapper] Invalid tier: "${tier}" (normalized: "${normalizedTier}")`);
+    if (import.meta.env.DEV) {
+      console.warn(`[assetMapper] Invalid tier: "${tier}" (normalized: "${normalizedTier}")`);
+    }
     return '/icons/tiers/iron.png';
   }
 
@@ -124,3 +130,26 @@ export const VALID_TIERS = [
 export type ValidItemId = typeof VALID_ITEM_IDS[number];
 export type ValidSpellId = typeof VALID_SPELL_IDS[number];
 export type ValidTier = typeof VALID_TIERS[number];
+
+/**
+ * 점수(score)를 기반으로 티어를 계산합니다.
+ *
+ * @param score - 사용자 점수
+ * @returns 계산된 티어 (ValidTier)
+ *
+ * @example
+ * calculateTierFromScore(500) // 'iron'
+ * calculateTierFromScore(2500) // 'silver'
+ * calculateTierFromScore(9000) // 'challenger'
+ */
+export function calculateTierFromScore(score: number): ValidTier {
+  if (score < 1000) return 'iron';
+  if (score < 2000) return 'bronze';
+  if (score < 3000) return 'silver';
+  if (score < 4000) return 'gold';
+  if (score < 5000) return 'platinum';
+  if (score < 6000) return 'diamond';
+  if (score < 7000) return 'master';
+  if (score < 8000) return 'grandmaster';
+  return 'challenger';
+}

@@ -4,7 +4,7 @@ import { useAuthStore } from '@/stores/useAuthStore';
 import { useStatsStore } from '@/stores/useStatsStore';
 import ChatPanel from '@/features/chat/ui/ChatPanel.vue';
 import bannerLiveSrc from '@/assets/images/banner-live.png';
-import { getTierIconPath } from '@/shared/utils/assetMapper.util';
+import { calculateTierFromScore, getTierIconPath } from '@/shared/utils/assetMapper.util';
 
 const authStore = useAuthStore();
 const statsStore = useStatsStore();
@@ -37,7 +37,7 @@ const topPlayers = computed(() => {
         name: p.nickname,
         score: p.score.toString(),
         tier: p.tier,
-        tierIconPath: getTierIconPath(p.tier)
+        tierIconPath: getTierIconPath(calculateTierFromScore(p.score))
     }));
 });
 

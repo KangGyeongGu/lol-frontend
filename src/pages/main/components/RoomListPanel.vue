@@ -198,7 +198,7 @@ async function handleJoinRoom(roomId: string) {
             </div>
 
             <!-- 필터 초기화 버튼 -->
-            <button class="filter-reset-icon" title="Reset Filters" @click="resetFilters">
+            <button class="filter-reset-icon" :title="MESSAGES.FILTER.RESET_FILTERS" @click="resetFilters">
                 <span class="icon">⟲</span>
             </button>
         </div>
@@ -219,7 +219,7 @@ async function handleJoinRoom(roomId: string) {
                 <input
                     v-model="searchQuery"
                     type="text"
-                    :placeholder="searchTarget === 'TITLE' ? 'Search by room title...' : 'Search by host name...'"
+                    :placeholder="searchTarget === 'TITLE' ? MESSAGES.ROOM.SEARCH_BY_TITLE : MESSAGES.ROOM.SEARCH_BY_HOST"
                 />
             </div>
         </div>
@@ -227,16 +227,16 @@ async function handleJoinRoom(roomId: string) {
 
     <div class="pagination-container">
         <div class="page-indicator">
-            <button class="page-nav prev" :disabled="currentPage === 1" @click="setPage(currentPage - 1)">PREV</button>
+            <button class="page-nav prev" :disabled="currentPage === 1" @click="setPage(currentPage - 1)">{{ MESSAGES.COMMON.PREV }}</button>
             <div class="page-dots">
                 <span v-for="p in totalPages" :key="p" class="dot" :class="{ active: currentPage === p }" @click="setPage(p)"></span>
             </div>
-            <button class="page-nav next" :disabled="currentPage === totalPages || totalPages === 0" @click="setPage(currentPage + 1)">NEXT</button>
+            <button class="page-nav next" :disabled="currentPage === totalPages || totalPages === 0" @click="setPage(currentPage + 1)">{{ MESSAGES.COMMON.NEXT }}</button>
         </div>
         <div class="room-count">
-            Page <span class="highlight">{{ totalPages === 0 ? 0 : currentPage }}</span> of {{ totalPages }}
+            {{ MESSAGES.PAGE.PAGE_OF }} <span class="highlight">{{ totalPages === 0 ? 0 : currentPage }}</span> {{ MESSAGES.PAGE.OF }} {{ totalPages }}
             <span class="divider">|</span>
-            Found <span class="highlight">{{ filteredRooms.length }}</span> Matches
+            {{ MESSAGES.PAGE.FOUND }} <span class="highlight">{{ filteredRooms.length }}</span> {{ MESSAGES.PAGE.MATCHES }}
         </div>
     </div>
 

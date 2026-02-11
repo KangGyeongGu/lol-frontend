@@ -53,7 +53,9 @@ async function fetchRoomDetail() {
     try {
         room.value = await roomStore.getRoomDetail(roomId);
     } catch (error) {
-        console.error('Failed to fetch room detail:', error);
+        if (import.meta.env.DEV) {
+            console.error('Failed to fetch room detail:', error);
+        }
         errorMessage.value = MESSAGES.ROOM.FETCH_FAILED;
         setTimeout(() => {
             router.push({ name: 'MAIN' });
@@ -86,7 +88,9 @@ async function handleLeave() {
         await roomStore.leaveRoom(roomId);
         router.replace({ name: 'MAIN' });
     } catch (error) {
-        console.error('Leave failed:', error);
+        if (import.meta.env.DEV) {
+            console.error('Leave failed:', error);
+        }
         router.replace({ name: 'MAIN' });
     }
 }
@@ -102,7 +106,9 @@ async function toggleReady() {
         }
         lastActionTime = Date.now();
     } catch (error) {
-        console.error('Toggle ready failed:', error);
+        if (import.meta.env.DEV) {
+            console.error('Toggle ready failed:', error);
+        }
     }
 }
 
@@ -111,7 +117,9 @@ async function handleStart() {
         await roomStore.startGame(roomId);
         // 전환은 ROOM_GAME_STARTED 이벤트로 전원 일괄 처리
     } catch (error) {
-        console.error('Start failed:', error);
+        if (import.meta.env.DEV) {
+            console.error('Start failed:', error);
+        }
     }
 }
 
@@ -121,7 +129,9 @@ async function handleKick(targetUserId: string) {
         await roomStore.kickPlayer(roomId, targetUserId);
         lastActionTime = Date.now();
     } catch (error) {
-        console.error('Kick failed:', error);
+        if (import.meta.env.DEV) {
+            console.error('Kick failed:', error);
+        }
     }
 }
 

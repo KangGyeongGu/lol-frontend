@@ -40,7 +40,9 @@ export const useAuthStore = defineStore('auth', () => {
             const profile = await authApi.getMe();
             user.value = toUserProfileViewModel(profile);
         } catch (error) {
-            console.error('[AuthStore] Fetch profile error:', error);
+            if (import.meta.env.DEV) {
+                console.error('[AuthStore] Fetch profile error:', error);
+            }
         }
     }
 

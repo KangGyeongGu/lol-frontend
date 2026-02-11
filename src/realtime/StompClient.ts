@@ -2,11 +2,20 @@ import { Client, type StompSubscription } from '@stomp/stompjs';
 import { tokenStorage } from '@/shared/utils/token.util';
 
 /**
+ * Subscription registry entry storing both the active subscription and the callback
+ * for automatic restoration on reconnect.
+ */
+interface SubscriptionEntry {
+    subscription: StompSubscription;
+    callback: (payload: unknown) => void;
+}
+
+/**
  * Singleton StompClient for managing WebSocket connections via STOMP over Native WebSockets.
  */
 class StompClient {
     private client: Client | null = null;
-    private subscriptions: Map<string, StompSubscription> = new Map();
+    private subscriptions: Map<string, SubscriptionEntry> = new Map();
     private connectionPromise: Promise<void> | null = null;
 
     /**
@@ -24,6 +33,7 @@ class StompClient {
                 const currentOnConnect = this.client.onConnect;
                 this.client.onConnect = (frame) => {
                     if (currentOnConnect) currentOnConnect(frame);
+                    this.restoreSubscriptions();
                     this.connectionPromise = null;
                     resolve();
                 };
@@ -56,18 +66,23 @@ class StompClient {
             });
 
             this.client.onConnect = () => {
+                this.restoreSubscriptions();
                 this.connectionPromise = null;
                 resolve();
             };
 
             this.client.onStompError = (frame) => {
-                console.error('[STOMP] Stomp error:', frame.headers['message']);
+                if (import.meta.env.DEV) {
+                    console.error('[STOMP] Stomp error:', frame.headers['message']);
+                }
                 this.connectionPromise = null;
                 reject(new Error(frame.headers['message']));
             };
 
             this.client.onWebSocketError = (event) => {
-                console.error('[STOMP] WebSocket error:', event);
+                if (import.meta.env.DEV) {
+                    console.error('[STOMP] WebSocket error:', event);
+                }
                 this.connectionPromise = null;
                 reject(new Error('WebSocket connection failed'));
             };
@@ -79,11 +94,36 @@ class StompClient {
     }
 
     /**
+     * Restore all subscriptions after reconnect.
+     * Called automatically in onConnect handler.
+     */
+    private restoreSubscriptions(): void {
+        if (!this.client?.connected) return;
+
+        // Re-subscribe to all topics with their original callbacks
+        const topics = Array.from(this.subscriptions.keys());
+        for (const topic of topics) {
+            const entry = this.subscriptions.get(topic);
+            if (entry) {
+                const newSubscription = this.client.subscribe(topic, (message) => {
+                    try {
+                        const payload = JSON.parse(message.body);
+                        entry.callback(payload);
+                    } catch {
+                        // Ignore parse errors
+                    }
+                });
+                entry.subscription = newSubscription;
+            }
+        }
+    }
+
+    /**
      * Disconnect from the server and clear all active subscriptions.
      */
     public disconnect(): void {
         if (this.client) {
-            this.subscriptions.forEach(sub => sub.unsubscribe());
+            this.subscriptions.forEach(entry => entry.subscription.unsubscribe());
             this.subscriptions.clear();
             this.client.deactivate();
             this.client = null;
@@ -116,7 +156,7 @@ class StompClient {
             }
         });
 
-        this.subscriptions.set(topic, subscription);
+        this.subscriptions.set(topic, { subscription, callback });
         return topic;
     }
 
@@ -124,9 +164,9 @@ class StompClient {
      * Unsubscribe from a specific topic.
      */
     public unsubscribe(topic: string): void {
-        const sub = this.subscriptions.get(topic);
-        if (sub) {
-            sub.unsubscribe();
+        const entry = this.subscriptions.get(topic);
+        if (entry) {
+            entry.subscription.unsubscribe();
             this.subscriptions.delete(topic);
         }
     }

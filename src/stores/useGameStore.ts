@@ -47,10 +47,35 @@ export const useGameStore = defineStore('game', () => {
     const picks = ref<BanPickEntry[]>([]);
     const gameResult = ref<GameFinishedViewModel | null>(null);
     const isLoading = ref(false);
+    const processedEventIds = ref<Set<string>>(new Set());
 
     const stage = computed<GameStage | null>(() => gameState.value?.stage ?? null);
     const gameId = computed<string | null>(() => gameState.value?.gameId ?? null);
     const roomId = computed<string | null>(() => gameState.value?.roomId ?? null);
+
+    // --- Event Deduplication ---
+
+    function shouldProcessEvent(eventId: string): boolean {
+        if (processedEventIds.value.has(eventId)) {
+            if (import.meta.env.DEV) {
+                console.warn('[GameStore] Duplicate event detected:', eventId);
+            }
+            return false;
+        }
+
+        processedEventIds.value.add(eventId);
+
+        // Keep only recent 1000 IDs for memory management
+        if (processedEventIds.value.size > 1000) {
+            const iter = processedEventIds.value.values();
+            const firstValue = iter.next().value;
+            if (firstValue !== undefined) {
+                processedEventIds.value.delete(firstValue);
+            }
+        }
+
+        return true;
+    }
 
     // --- REST Actions ---
 
@@ -67,7 +92,9 @@ export const useGameStore = defineStore('game', () => {
                 ).toISOString();
             }
         } catch (error) {
-            console.error('[GameStore] Fetch state error:', error);
+            if (import.meta.env.DEV) {
+                console.error('[GameStore] Fetch state error:', error);
+            }
             throw error;
         } finally {
             isLoading.value = false;
@@ -80,7 +107,9 @@ export const useGameStore = defineStore('game', () => {
             gameState.value = toGameStateViewModel(dto);
             return gameState.value;
         } catch (error) {
-            console.error('[GameStore] Submit ban error:', error);
+            if (import.meta.env.DEV) {
+                console.error('[GameStore] Submit ban error:', error);
+            }
             throw error;
         }
     }
@@ -91,7 +120,9 @@ export const useGameStore = defineStore('game', () => {
             gameState.value = toGameStateViewModel(dto);
             return gameState.value;
         } catch (error) {
-            console.error('[GameStore] Submit pick error:', error);
+            if (import.meta.env.DEV) {
+                console.error('[GameStore] Submit pick error:', error);
+            }
             throw error;
         }
     }
@@ -102,7 +133,9 @@ export const useGameStore = defineStore('game', () => {
             gameState.value = toGameStateViewModel(dto);
             return gameState.value;
         } catch (error) {
-            console.error('[GameStore] Purchase item error:', error);
+            if (import.meta.env.DEV) {
+                console.error('[GameStore] Purchase item error:', error);
+            }
             throw error;
         }
     }
@@ -113,7 +146,9 @@ export const useGameStore = defineStore('game', () => {
             gameState.value = toGameStateViewModel(dto);
             return gameState.value;
         } catch (error) {
-            console.error('[GameStore] Purchase spell error:', error);
+            if (import.meta.env.DEV) {
+                console.error('[GameStore] Purchase spell error:', error);
+            }
             throw error;
         }
     }
@@ -124,14 +159,20 @@ export const useGameStore = defineStore('game', () => {
             gameState.value = toGameStateViewModel(dto);
             return gameState.value;
         } catch (error) {
-            console.error('[GameStore] Submit code error:', error);
+            if (import.meta.env.DEV) {
+                console.error('[GameStore] Submit code error:', error);
+            }
             throw error;
         }
     }
 
     // --- Real-time Event Handlers ---
 
-    function handleStageChanged(data: GameStageChangedEvent) {
+    function handleStageChanged(data: GameStageChangedEvent, eventId: string) {
+        if (!shouldProcessEvent(eventId)) {
+            return;
+        }
+
         const vm = toStageChangedViewModel(data);
         stageDeadlineAt.value = vm.stageDeadlineAt;
 
@@ -152,37 +193,61 @@ export const useGameStore = defineStore('game', () => {
         }
     }
 
-    function handleBanSubmitted(data: GameBanSubmittedEvent) {
+    function handleBanSubmitted(data: GameBanSubmittedEvent, eventId: string) {
+        if (!shouldProcessEvent(eventId)) {
+            return;
+        }
+
         const vm = toBanSubmittedViewModel(data);
         bans.value = [...bans.value, { userId: vm.userId, algorithmId: vm.algorithmId }];
     }
 
-    function handlePickSubmitted(data: GamePickSubmittedEvent) {
+    function handlePickSubmitted(data: GamePickSubmittedEvent, eventId: string) {
+        if (!shouldProcessEvent(eventId)) {
+            return;
+        }
+
         const vm = toPickSubmittedViewModel(data);
         picks.value = [...picks.value, { userId: vm.userId, algorithmId: vm.algorithmId }];
     }
 
-    function handleItemPurchased(data: GameItemPurchasedEvent) {
+    function handleItemPurchased(data: GameItemPurchasedEvent, eventId: string) {
+        if (!shouldProcessEvent(eventId)) {
+            return;
+        }
+
         const vm = toItemPurchasedViewModel(data);
-        if (gameState.value) {
-            gameState.value = {
-                ...gameState.value,
-                coin: gameState.value.coin - vm.totalPrice,
-            };
+        // NOTE: Coin is NOT updated here (server-authoritative principle).
+        // Coin updates come from REST responses only:
+        // 1. fetchGameState() - GET /games/{id}/state
+        // 2. purchaseItem() - POST /games/{id}/shop/items (already updates gameState)
+        // See: FE_STATE_RULES.md § 5
+        if (import.meta.env.DEV) {
+            console.log('[GameStore] Item purchased:', vm);
         }
     }
 
-    function handleSpellPurchased(data: GameSpellPurchasedEvent) {
+    function handleSpellPurchased(data: GameSpellPurchasedEvent, eventId: string) {
+        if (!shouldProcessEvent(eventId)) {
+            return;
+        }
+
         const vm = toSpellPurchasedViewModel(data);
-        if (gameState.value) {
-            gameState.value = {
-                ...gameState.value,
-                coin: gameState.value.coin - vm.totalPrice,
-            };
+        // NOTE: Coin is NOT updated here (server-authoritative principle).
+        // Coin updates come from REST responses only:
+        // 1. fetchGameState() - GET /games/{id}/state
+        // 2. purchaseSpell() - POST /games/{id}/shop/spells (already updates gameState)
+        // See: FE_STATE_RULES.md § 5
+        if (import.meta.env.DEV) {
+            console.log('[GameStore] Spell purchased:', vm);
         }
     }
 
-    function handleInventorySync(inventory: Inventory) {
+    function handleInventorySync(inventory: Inventory, eventId: string) {
+        if (!shouldProcessEvent(eventId)) {
+            return;
+        }
+
         if (gameState.value) {
             gameState.value = {
                 ...gameState.value,
@@ -191,30 +256,58 @@ export const useGameStore = defineStore('game', () => {
         }
     }
 
-    function handleGameFinished(data: GameFinishedEvent) {
+    function handleGameFinished(data: GameFinishedEvent, eventId: string) {
+        if (!shouldProcessEvent(eventId)) {
+            return;
+        }
+
         gameResult.value = toGameFinishedViewModel(data);
         if (gameState.value) {
             gameState.value = { ...gameState.value, stage: 'FINISHED' };
         }
     }
 
-    function handleItemEffectApplied(data: ItemEffectAppliedEvent) {
-        console.log('[GameStore] Item effect applied:', data);
+    function handleItemEffectApplied(data: ItemEffectAppliedEvent, eventId: string) {
+        if (!shouldProcessEvent(eventId)) {
+            return;
+        }
+
+        if (import.meta.env.DEV) {
+            console.log('[GameStore] Item effect applied:', data);
+        }
         // TODO: 이펙트 UI 표시 로직 (추후 activeEffects 상태 추가 가능)
     }
 
-    function handleSpellEffectApplied(data: SpellEffectAppliedEvent) {
-        console.log('[GameStore] Spell effect applied:', data);
+    function handleSpellEffectApplied(data: SpellEffectAppliedEvent, eventId: string) {
+        if (!shouldProcessEvent(eventId)) {
+            return;
+        }
+
+        if (import.meta.env.DEV) {
+            console.log('[GameStore] Spell effect applied:', data);
+        }
         // TODO: 이펙트 UI 표시 로직
     }
 
-    function handleItemEffectBlocked(data: ItemEffectBlockedEvent) {
-        console.log('[GameStore] Item effect blocked:', data);
+    function handleItemEffectBlocked(data: ItemEffectBlockedEvent, eventId: string) {
+        if (!shouldProcessEvent(eventId)) {
+            return;
+        }
+
+        if (import.meta.env.DEV) {
+            console.log('[GameStore] Item effect blocked:', data);
+        }
         // TODO: 차단 피드백 표시
     }
 
-    function handleEffectRemoved(data: EffectRemovedEvent) {
-        console.log('[GameStore] Effect removed:', data);
+    function handleEffectRemoved(data: EffectRemovedEvent, eventId: string) {
+        if (!shouldProcessEvent(eventId)) {
+            return;
+        }
+
+        if (import.meta.env.DEV) {
+            console.log('[GameStore] Effect removed:', data);
+        }
         // TODO: 이펙트 UI 제거
     }
 
@@ -225,6 +318,7 @@ export const useGameStore = defineStore('game', () => {
         picks.value = [];
         gameResult.value = null;
         isLoading.value = false;
+        processedEventIds.value.clear();
     }
 
     return {

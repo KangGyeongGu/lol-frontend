@@ -30,7 +30,9 @@ export const useStatsStore = defineStore('stats', () => {
             const response = await statsApi.getPlayerRankings();
             playerRankings.value = response.items.map(toPlayerRankingViewModel);
         } catch (error) {
-            console.error('[StatsStore] Fetch rankings error:', error);
+            if (import.meta.env.DEV) {
+                console.error('[StatsStore] Fetch rankings error:', error);
+            }
         } finally {
             isLoading.value = false;
         }
@@ -42,7 +44,9 @@ export const useStatsStore = defineStore('stats', () => {
             const response = await statsApi.getAlgorithmPickBanRates();
             pickBanRates.value = response.items.map(toAlgorithmPickBanRateViewModel);
         } catch (error) {
-            console.error('[StatsStore] Fetch rates error:', error);
+            if (import.meta.env.DEV) {
+                console.error('[StatsStore] Fetch rates error:', error);
+            }
         } finally {
             isLoading.value = false;
         }
@@ -54,7 +58,9 @@ export const useStatsStore = defineStore('stats', () => {
             const response = await statsApi.getMyStats();
             myStats.value = toUserStatsViewModel(response);
         } catch (error) {
-            console.error('[StatsStore] Fetch my stats error:', error);
+            if (import.meta.env.DEV) {
+                console.error('[StatsStore] Fetch my stats error:', error);
+            }
             throw error;
         } finally {
             isLoadingStats.value = false;
@@ -68,7 +74,9 @@ export const useStatsStore = defineStore('stats', () => {
             myMatches.value = response.items.map(toMatchSummaryViewModel);
             matchesCursor.value = response.page.nextCursor;
         } catch (error) {
-            console.error('[StatsStore] Fetch my matches error:', error);
+            if (import.meta.env.DEV) {
+                console.error('[StatsStore] Fetch my matches error:', error);
+            }
             throw error;
         } finally {
             isLoadingMatches.value = false;

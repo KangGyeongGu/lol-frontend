@@ -16,6 +16,31 @@ export const useRoomStore = defineStore('room', () => {
     const totalRoomsCount = ref(0);
     const isLoading = ref(false);
     const listVersion = ref(0);
+    const processedEventIds = ref<Set<string>>(new Set());
+
+    // --- Event Deduplication ---
+
+    function shouldProcessEvent(eventId: string): boolean {
+        if (processedEventIds.value.has(eventId)) {
+            if (import.meta.env.DEV) {
+                console.warn('[RoomStore] Duplicate event detected:', eventId);
+            }
+            return false;
+        }
+
+        processedEventIds.value.add(eventId);
+
+        // Keep only recent 1000 IDs for memory management
+        if (processedEventIds.value.size > 1000) {
+            const iter = processedEventIds.value.values();
+            const firstValue = iter.next().value;
+            if (firstValue !== undefined) {
+                processedEventIds.value.delete(firstValue);
+            }
+        }
+
+        return true;
+    }
 
     async function fetchRooms(params?: RoomFilterParams) {
         isLoading.value = true;
@@ -25,7 +50,9 @@ export const useRoomStore = defineStore('room', () => {
             listVersion.value = response.listVersion;
             // TODO: 필요한 경우 페이징 처리를 위한 전체 카운트 처리 추가
         } catch (error) {
-            console.error('[RoomStore] Fetch error:', error);
+            if (import.meta.env.DEV) {
+                console.error('[RoomStore] Fetch error:', error);
+            }
         } finally {
             isLoading.value = false;
         }
@@ -36,7 +63,9 @@ export const useRoomStore = defineStore('room', () => {
             const dto = await roomApi.createRoom(req);
             return toRoomDetailViewModel(dto);
         } catch (error) {
-            console.error('[RoomStore] Create error:', error);
+            if (import.meta.env.DEV) {
+                console.error('[RoomStore] Create error:', error);
+            }
             throw error;
         }
     }
@@ -46,7 +75,9 @@ export const useRoomStore = defineStore('room', () => {
             const dto = await roomApi.joinRoom(roomId);
             return toRoomDetailViewModel(dto);
         } catch (error) {
-            console.error('[RoomStore] Join error:', error);
+            if (import.meta.env.DEV) {
+                console.error('[RoomStore] Join error:', error);
+            }
             throw error;
         }
     }
@@ -56,7 +87,9 @@ export const useRoomStore = defineStore('room', () => {
             const dto = await roomApi.getRoomDetail(roomId);
             return toRoomDetailViewModel(dto);
         } catch (error) {
-            console.error('[RoomStore] GetRoomDetail error:', error);
+            if (import.meta.env.DEV) {
+                console.error('[RoomStore] GetRoomDetail error:', error);
+            }
             throw error;
         }
     }
@@ -65,7 +98,9 @@ export const useRoomStore = defineStore('room', () => {
         try {
             await roomApi.leaveRoom(roomId);
         } catch (error) {
-            console.error('[RoomStore] Leave error:', error);
+            if (import.meta.env.DEV) {
+                console.error('[RoomStore] Leave error:', error);
+            }
             throw error;
         }
     }
@@ -75,7 +110,9 @@ export const useRoomStore = defineStore('room', () => {
             const dto = await roomApi.ready(roomId);
             return toRoomDetailViewModel(dto);
         } catch (error) {
-            console.error('[RoomStore] Ready error:', error);
+            if (import.meta.env.DEV) {
+                console.error('[RoomStore] Ready error:', error);
+            }
             throw error;
         }
     }
@@ -85,7 +122,9 @@ export const useRoomStore = defineStore('room', () => {
             const dto = await roomApi.unready(roomId);
             return toRoomDetailViewModel(dto);
         } catch (error) {
-            console.error('[RoomStore] Unready error:', error);
+            if (import.meta.env.DEV) {
+                console.error('[RoomStore] Unready error:', error);
+            }
             throw error;
         }
     }
@@ -95,7 +134,9 @@ export const useRoomStore = defineStore('room', () => {
             const dto = await roomApi.startGame(roomId);
             return toActiveGameViewModel(dto);
         } catch (error) {
-            console.error('[RoomStore] StartGame error:', error);
+            if (import.meta.env.DEV) {
+                console.error('[RoomStore] StartGame error:', error);
+            }
             throw error;
         }
     }
@@ -104,14 +145,20 @@ export const useRoomStore = defineStore('room', () => {
         try {
             await roomApi.kickPlayer(roomId, userId);
         } catch (error) {
-            console.error('[RoomStore] Kick error:', error);
+            if (import.meta.env.DEV) {
+                console.error('[RoomStore] Kick error:', error);
+            }
             throw error;
         }
     }
 
     // --- Real-time Handlers ---
 
-    function handleRoomUpsert(room: RoomSummaryViewModel) {
+    function handleRoomUpsert(room: RoomSummaryViewModel, eventId: string) {
+        if (!shouldProcessEvent(eventId)) {
+            return;
+        }
+
         const index = rooms.value.findIndex(r => r.roomId === room.roomId);
         if (index !== -1) {
             rooms.value[index] = room;
@@ -120,7 +167,11 @@ export const useRoomStore = defineStore('room', () => {
         }
     }
 
-    function handleRoomRemoved(roomId: string) {
+    function handleRoomRemoved(roomId: string, eventId: string) {
+        if (!shouldProcessEvent(eventId)) {
+            return;
+        }
+
         rooms.value = rooms.value.filter(r => r.roomId !== roomId);
     }
 

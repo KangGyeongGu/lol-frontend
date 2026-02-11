@@ -20,6 +20,7 @@ import type {
     SpellEffectAppliedEvent,
     ItemEffectBlockedEvent,
     EffectRemovedEvent,
+    TypingStatusChangedEvent,
 } from '@/api/dtos/game.dto';
 
 function asEnvelope(payload: unknown): StompEventEnvelope {
@@ -53,11 +54,16 @@ function generateCommandMeta(): CommandMeta {
  * Also provides send methods for outbound messages.
  */
 export class EventDispatcher {
+    private static isInitialized: boolean = false;
+
     /**
      * Initialize user queue subscriptions and global topic subscriptions.
      * LIFECYCLE.md 2.1: 로그인 완료 후 기본 구독 설정 (1회)
      */
     static async init() {
+        if (this.isInitialized) {
+            return;
+        }
         // --- User Queues (LIFECYCLE.md 2.1) ---
 
         await stompClient.subscribe('/user/queue/errors', (raw) => {
@@ -65,7 +71,9 @@ export class EventDispatcher {
             feedServerTime(envelope);
             if (envelope.type === 'ERROR') {
                 const data = envelope.data as { code: string; message: string };
-                console.error('[EventDispatcher] Server error:', data.code, data.message);
+                if (import.meta.env.DEV) {
+                    console.error('[EventDispatcher] Server error:', data.code, data.message);
+                }
             }
         });
 
@@ -80,7 +88,9 @@ export class EventDispatcher {
             feedServerTime(envelope);
             if (envelope.type === 'ROOM_KICKED') {
                 const data = envelope.data as { roomId: string };
-                console.warn('[EventDispatcher] Kicked from room:', data.roomId);
+                if (import.meta.env.DEV) {
+                    console.warn('[EventDispatcher] Kicked from room:', data.roomId);
+                }
                 // TODO: roomStore.handleKicked(data.roomId) 구현 후 연결
             }
         });
@@ -92,6 +102,7 @@ export class EventDispatcher {
                 const gameStore = useGameStore();
                 gameStore.handleInventorySync(
                     (envelope.data as { inventory: Inventory }).inventory,
+                    envelope.meta?.eventId || `fallback_${Date.now()}`,
                 );
             }
         });
@@ -103,8 +114,17 @@ export class EventDispatcher {
             feedServerTime(envelope);
             if (envelope.type === 'CHAT_MESSAGE') {
                 const chatStore = useChatStore();
-                const data = envelope.data as { message: string; sender: { nickname: string } };
-                chatStore.receiveMessage('global', data.message, data.sender.nickname);
+                const data = envelope.data as {
+                    messageId: string;
+                    message: string;
+                    sender: { userId: string; nickname: string };
+                    createdAt: string;
+                };
+                chatStore.receiveMessage(
+                    'global',
+                    data,
+                    envelope.meta?.eventId || `fallback_${Date.now()}`,
+                );
             }
         });
 
@@ -115,13 +135,25 @@ export class EventDispatcher {
             if (envelope.type === 'ROOM_LIST_UPSERT') {
                 roomStore.handleRoomUpsert(
                     (envelope.data as { room: import('@/entities/room.model').RoomSummaryViewModel }).room,
+                    envelope.meta?.eventId || `fallback_${Date.now()}`,
                 );
             } else if (envelope.type === 'ROOM_LIST_REMOVED') {
                 roomStore.handleRoomRemoved(
                     (envelope.data as { roomId: string }).roomId,
+                    envelope.meta?.eventId || `fallback_${Date.now()}`,
                 );
             }
         });
+
+        this.isInitialized = true;
+    }
+
+    /**
+     * Reset initialization state when disconnecting.
+     * This allows re-initialization after reconnect.
+     */
+    static disconnect() {
+        this.isInitialized = false;
     }
 
     private static roomCallback: ((type: string, data: unknown) => void) | null = null;
@@ -132,19 +164,34 @@ export class EventDispatcher {
     static async subscribeToRoom(roomId: string, onEvent?: (type: string, data: unknown) => void) {
         this.roomCallback = onEvent || null;
 
-        console.log('[EventDispatcher] subscribeToRoom called with roomId:', roomId);
-        console.log('[EventDispatcher] Subscribing to:', `/topic/rooms/${roomId}/chat`);
-        console.log('[EventDispatcher] Subscribing to:', `/topic/rooms/${roomId}/lobby`);
+        if (import.meta.env.DEV) {
+            console.log('[EventDispatcher] subscribeToRoom called with roomId:', roomId);
+            console.log('[EventDispatcher] Subscribing to:', `/topic/rooms/${roomId}/chat`);
+            console.log('[EventDispatcher] Subscribing to:', `/topic/rooms/${roomId}/lobby`);
+        }
 
         await stompClient.subscribe(`/topic/rooms/${roomId}/chat`, (raw) => {
             const envelope = asEnvelope(raw);
             feedServerTime(envelope);
-            console.log('[EventDispatcher] Received room chat:', envelope);
+            if (import.meta.env.DEV) {
+                console.log('[EventDispatcher] Received room chat:', envelope);
+            }
             if (envelope.type === 'CHAT_MESSAGE') {
                 const chatStore = useChatStore();
-                const data = envelope.data as { message: string; sender: { nickname: string } };
-                console.log('[EventDispatcher] Processing CHAT_MESSAGE for roomId:', roomId, 'data:', data);
-                chatStore.receiveMessage(roomId, data.message, data.sender.nickname);
+                const data = envelope.data as {
+                    messageId: string;
+                    message: string;
+                    sender: { userId: string; nickname: string };
+                    createdAt: string;
+                };
+                if (import.meta.env.DEV) {
+                    console.log('[EventDispatcher] Processing CHAT_MESSAGE for roomId:', roomId, 'data:', data);
+                }
+                chatStore.receiveMessage(
+                    roomId,
+                    data,
+                    envelope.meta?.eventId || `fallback_${Date.now()}`,
+                );
             }
         });
 
@@ -174,37 +221,38 @@ export class EventDispatcher {
             const envelope = asEnvelope(raw);
             feedServerTime(envelope);
             const gameStore = useGameStore();
+            const eventId = envelope.meta?.eventId || `fallback_${Date.now()}`;
 
             switch (envelope.type) {
                 case 'GAME_STAGE_CHANGED':
-                    gameStore.handleStageChanged(envelope.data as GameStageChangedEvent);
+                    gameStore.handleStageChanged(envelope.data as GameStageChangedEvent, eventId);
                     break;
                 case 'GAME_BAN_SUBMITTED':
-                    gameStore.handleBanSubmitted(envelope.data as GameBanSubmittedEvent);
+                    gameStore.handleBanSubmitted(envelope.data as GameBanSubmittedEvent, eventId);
                     break;
                 case 'GAME_PICK_SUBMITTED':
-                    gameStore.handlePickSubmitted(envelope.data as GamePickSubmittedEvent);
+                    gameStore.handlePickSubmitted(envelope.data as GamePickSubmittedEvent, eventId);
                     break;
                 case 'GAME_ITEM_PURCHASED':
-                    gameStore.handleItemPurchased(envelope.data as GameItemPurchasedEvent);
+                    gameStore.handleItemPurchased(envelope.data as GameItemPurchasedEvent, eventId);
                     break;
                 case 'GAME_SPELL_PURCHASED':
-                    gameStore.handleSpellPurchased(envelope.data as GameSpellPurchasedEvent);
+                    gameStore.handleSpellPurchased(envelope.data as GameSpellPurchasedEvent, eventId);
                     break;
                 case 'GAME_FINISHED':
-                    gameStore.handleGameFinished(envelope.data as GameFinishedEvent);
+                    gameStore.handleGameFinished(envelope.data as GameFinishedEvent, eventId);
                     break;
                 case 'ITEM_EFFECT_APPLIED':
-                    gameStore.handleItemEffectApplied(envelope.data as ItemEffectAppliedEvent);
+                    gameStore.handleItemEffectApplied(envelope.data as ItemEffectAppliedEvent, eventId);
                     break;
                 case 'SPELL_EFFECT_APPLIED':
-                    gameStore.handleSpellEffectApplied(envelope.data as SpellEffectAppliedEvent);
+                    gameStore.handleSpellEffectApplied(envelope.data as SpellEffectAppliedEvent, eventId);
                     break;
                 case 'ITEM_EFFECT_BLOCKED':
-                    gameStore.handleItemEffectBlocked(envelope.data as ItemEffectBlockedEvent);
+                    gameStore.handleItemEffectBlocked(envelope.data as ItemEffectBlockedEvent, eventId);
                     break;
                 case 'EFFECT_REMOVED':
-                    gameStore.handleEffectRemoved(envelope.data as EffectRemovedEvent);
+                    gameStore.handleEffectRemoved(envelope.data as EffectRemovedEvent, eventId);
                     break;
             }
         });
@@ -215,6 +263,36 @@ export class EventDispatcher {
      */
     static unsubscribeFromGame(gameId: string) {
         stompClient.unsubscribe(`/topic/games/${gameId}`);
+    }
+
+    /**
+     * Subscribe to typing topic when entering IN_GAME page.
+     * TOPICS.md § 3: IN_GAME subscribes to /topic/rooms/{roomId}/typing
+     * EVENTS.md § 7.1: Handles TYPING_STATUS_CHANGED events
+     */
+    static async subscribeToTyping(roomId: string) {
+        await stompClient.subscribe(`/topic/rooms/${roomId}/typing`, (raw) => {
+            const envelope = asEnvelope(raw);
+            feedServerTime(envelope);
+
+            if (envelope.type === 'TYPING_STATUS_CHANGED') {
+                const chatStore = useChatStore();
+                const data = envelope.data as TypingStatusChangedEvent;
+                chatStore.handleTypingStatus(
+                    data.roomId,
+                    data.userId,
+                    data.isTyping,
+                    envelope.meta?.eventId || `fallback_${Date.now()}`,
+                );
+            }
+        });
+    }
+
+    /**
+     * Cleanup typing subscriptions when leaving IN_GAME page.
+     */
+    static unsubscribeFromTyping(roomId: string) {
+        stompClient.unsubscribe(`/topic/rooms/${roomId}/typing`);
     }
 
     /**
@@ -234,11 +312,13 @@ export class EventDispatcher {
             meta: generateCommandMeta(),
         };
 
-        console.log('[EventDispatcher] Sending CHAT_SEND:', {
-            channelId,
-            isGlobal,
-            payload,
-        });
+        if (import.meta.env.DEV) {
+            console.log('[EventDispatcher] Sending CHAT_SEND:', {
+                channelId,
+                isGlobal,
+                payload,
+            });
+        }
         stompClient.send('/app/chat.send', payload);
     }
 
@@ -256,7 +336,9 @@ export class EventDispatcher {
             meta: generateCommandMeta(),
         };
 
-        console.log('[EventDispatcher] Sending TYPING_UPDATE:', payload);
+        if (import.meta.env.DEV) {
+            console.log('[EventDispatcher] Sending TYPING_UPDATE:', payload);
+        }
         stompClient.send(`/app/rooms/${roomId}/typing`, payload);
     }
 
@@ -275,7 +357,9 @@ export class EventDispatcher {
             meta: generateCommandMeta(),
         };
 
-        console.log('[EventDispatcher] Sending ITEM_USE:', payload);
+        if (import.meta.env.DEV) {
+            console.log('[EventDispatcher] Sending ITEM_USE:', payload);
+        }
         stompClient.send(`/app/games/${gameId}/items.use`, payload);
     }
 
@@ -293,7 +377,9 @@ export class EventDispatcher {
             meta: generateCommandMeta(),
         };
 
-        console.log('[EventDispatcher] Sending SPELL_USE:', payload);
+        if (import.meta.env.DEV) {
+            console.log('[EventDispatcher] Sending SPELL_USE:', payload);
+        }
         stompClient.send(`/app/games/${gameId}/spells.use`, payload);
     }
 }
